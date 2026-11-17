@@ -526,7 +526,7 @@
     }
   </style>
 </head>
-<body class="bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] antialiased m-0 p-0 min-h-screen flex flex-col">
+<body class="bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] antialiased m-0 p-0 min-h-screen lg:h-screen lg:overflow-hidden flex flex-col">
 
   <!-- 頂部導覽與工具列 -->
   <header class="no-print sticky top-0 z-30 bg-[var(--card,#ffffff)] border-b border-[var(--border,#cbd5e1)] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
@@ -551,51 +551,51 @@
 
     <div class="flex flex-wrap items-center gap-1.5 text-xs">
       <button id="btn-load-sketch" type="button" onclick="loadSketchTemplate()"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-medium transition">
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition">
         空白範本
       </button>
       <button id="btn-load-demo" type="button" onclick="loadDetailedExample()"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-medium transition"
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition"
         title="載入包含配偶、代位繼承、身分證字號、戶籍地與日治時期換算之完整實務範例">
         完整範例
       </button>
       <button id="btn-clear-all" type="button" onclick="resetToBlank()"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--error,#dc2626)] font-medium transition">
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--error,#dc2626)] font-bold transition">
         清空
       </button>
       <span class="h-4 w-px bg-[var(--border,#cbd5e1)] mx-0.5"></span>
       <button id="btn-save-json" type="button" onclick="exportProjectJSON()"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-medium transition"
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition"
         title="儲存成專案檔 (.json)，下次可載入繼續修改">
         儲存 (.json)
       </button>
-      <label class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-medium transition cursor-pointer" title="讀取先前儲存的 .json 專案檔或範例檔">
+      <label class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition cursor-pointer" title="讀取先前儲存的 .json 專案檔或範例檔">
         讀取 (.json)
         <input id="input-load-json" type="file" accept=".json" class="hidden" onchange="importProjectJSON(event)" />
       </label>
       <span class="h-4 w-px bg-[var(--border,#cbd5e1)] mx-0.5"></span>
       <button id="btn-export-word" type="button" onclick="exportAsWord()"
-        class="px-2.5 py-1.5 rounded-md bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] hover:opacity-90 font-semibold shadow-sm transition"
+        class="px-2.5 py-1.5 rounded-md bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] hover:opacity-90 font-bold shadow-sm transition"
         title="匯出包含「繼承系統表（高畫質圖表）」與「繼承人明細一覽表」之 Word (.docx) 檔案">
         📄 Word
       </button>
       <button id="btn-export-excel" type="button" onclick="exportAsExcel()"
         style="background-color:#059669;color:#ffffff;"
-        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-semibold shadow-sm transition"
+        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-bold shadow-sm transition"
         title="匯出包含「繼承系統表（樹狀排版）」與「繼承人明細一覽表」雙工作表之 Excel (.xlsx) 檔案">
         📊 Excel
       </button>
       <button id="btn-export-jpeg" type="button" onclick="exportAsImage('jpeg')"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--secondary,#e2e8f0)] text-[var(--secondary-foreground,#0f172a)] hover:opacity-90 font-semibold transition">
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--secondary,#e2e8f0)] text-[var(--secondary-foreground,#0f172a)] hover:opacity-90 font-bold transition">
         🖼️ JPEG
       </button>
       <button id="btn-export-png" type="button" onclick="exportAsImage('png')"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] hover:opacity-80 font-semibold transition">
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] hover:opacity-80 font-bold transition">
         🏞️ PNG
       </button>
       <button id="btn-export-pdf" type="button" onclick="exportAsPdf()"
         style="background-color:#dc2626;color:#ffffff;"
-        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-semibold shadow-sm transition inline-flex items-center gap-1.5"
+        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-bold shadow-sm transition inline-flex items-center gap-1.5"
         title="直接產出並下載 PDF 檔案（含「繼承系統表」與「繼承人明細一覽表」）">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -607,13 +607,13 @@
       </button>
       <button id="btn-print" type="button" onclick="printChart()"
         style="background-color:#1e293b;color:#ffffff;"
-        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-semibold shadow-sm transition"
+        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-bold shadow-sm transition"
         title="開啟印表機列印（自動等比例縮放納入單頁）">
         🖨️ 列印
       </button>
       <span class="h-4 w-px bg-[var(--border,#cbd5e1)] mx-0.5"></span>
       <button id="btn-toggle-theme" type="button" onclick="toggleTheme()"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-medium transition"
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition"
         title="切換介面深色模式／淺色模式（右側繼承系統表白紙維持公文列印底色）">
         🌙 深色模式
       </button>
@@ -1066,10 +1066,10 @@
     </aside>
 
     <!-- 右側即時繼承系統表畫布預覽區 (7/12) -->
-    <section class="lg:col-span-7 xl:col-span-7 bg-[var(--background,#f1f5f9)] flex flex-col max-h-[calc(100vh-57px)] overflow-auto">
+    <section class="lg:col-span-7 xl:col-span-7 bg-[var(--background,#f1f5f9)] flex flex-col lg:h-full lg:min-h-0 overflow-hidden">
 
       <!-- 畫布上方提示與縮放列 -->
-      <div class="no-print px-4 py-2 border-b border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="no-print px-4 py-2 border-b border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
         <div class="flex items-center gap-2 text-[var(--muted-foreground,#475569)]">
           <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
           <span>💡 <strong>產出後修改方式：</strong>直接點擊下方圖表中的<strong>任何人名或區塊</strong>，即可修改資料、新增其下一代子女或調整順序！</span>
@@ -1090,7 +1090,7 @@
       </div>
 
       <!-- 紙張預覽容器 -->
-      <div class="p-6 md:p-8 flex-1 overflow-auto flex justify-start items-start">
+      <div id="preview-scroll-container" class="p-6 md:p-8 flex-1 min-h-0 overflow-auto flex justify-start items-start">
         <div id="printable-area" style="width: max-content; min-width: 760px;" class="paper-sheet font-kai p-8 md:p-12 shrink-0 rounded-sm">
 
           <!-- 選填表頭標題 -->
