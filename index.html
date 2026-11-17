@@ -3239,7 +3239,7 @@
           )
           .join("");
         const drawingXml = `<w:p>
-          <w:pPr><w:jc w:val="center"/><w:spacing w:after="160"/></w:pPr>
+          <w:pPr><w:spacing w:after="160"/><w:jc w:val="center"/></w:pPr>
           <w:r>
             <w:drawing>
               <wp:inline distT="0" distB="0" distL="0" distR="0">
@@ -3302,6 +3302,7 @@
       ${headerRowXml}
       ${bodyRowsXml}
     </w:tbl>
+    <w:p/>
     <w:sectPr>
       <w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>
       <w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="400" w:footer="400" w:gutter="0"/>
@@ -3332,16 +3333,20 @@
         const filesMap = {
           "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Default Extension="rels" ContentType="application/vnd.openxmlformats-officedocument.relationships+xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Default Extension="xml" ContentType="application/xml"/>
   <Default Extension="png" ContentType="image/png"/>
   <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
   <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
   <Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>
+  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
 </Types>`,
           "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
 </Relationships>`,
           "word/_rels/document.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
@@ -3349,6 +3354,17 @@
   <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
   <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>
 </Relationships>`,
+          "docProps/core.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <dc:title>${escapeXml(titleText)}</dc:title>
+  <dc:creator>Inheritance Chart Builder</dc:creator>
+  <dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().replace(/\.\d{3}Z$/, "Z")}</dcterms:created>
+  <dcterms:modified xsi:type="dcterms:W3CDTF">${new Date().toISOString().replace(/\.\d{3}Z$/, "Z")}</dcterms:modified>
+</cp:coreProperties>`,
+          "docProps/app.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">
+  <Application>Microsoft Office Word</Application>
+</Properties>`,
           "word/media/chart.png": pngBytes,
           "word/styles.xml": stylesXml,
           "word/settings.xml": settingsXml,
@@ -3420,7 +3436,7 @@
       const rowsXml = sortedRows
         .map((r) => {
           const rowCells = rowMap.get(r).sort((a, b) => a.c - b.c);
-          const htAttr = rowHeights[r] ? ` ht="${rowHeights[r]}" customHeight="1"` : "";
+          const htAttr = rowHeights[r] ? ` ht="${Math.min(409, Math.round(rowHeights[r]))}" customHeight="1"` : "";
           const cellsXml = rowCells
             .map((cell) => {
               const ref = `${excelColName(cell.c)}${cell.r}`;
@@ -3467,7 +3483,6 @@
         // 樣式索引：0=一般, 1=標題, 2=表頭, 3=被繼承人卡片, 4=配偶卡片, 5=繼承人卡片
         const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <numFmts count="0"/>
   <fonts count="4">
     <font><sz val="11"/><name val="標楷體"/></font>
     <font><b/><sz val="16"/><name val="標楷體"/></font>
@@ -3475,7 +3490,7 @@
     <font><b/><sz val="11"/><color rgb="FF0F172A"/><name val="標楷體"/></font>
   </fonts>
   <fills count="6">
-    <fill><patternFill/></fill>
+    <fill><patternFill patternType="none"/></fill>
     <fill><patternFill patternType="gray125"/></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FF1E293B"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFFEF3C7"/></patternFill></fill>
@@ -3701,7 +3716,7 @@
 
         const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Default Extension="rels" ContentType="application/vnd.openxmlformats-officedocument.relationships+xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Default Extension="xml" ContentType="application/xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
   <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
