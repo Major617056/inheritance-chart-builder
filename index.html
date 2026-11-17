@@ -1134,7 +1134,62 @@
 
   </main>
 
+  <!-- 站內自訂提示／確認視窗（取代瀏覽器原生 alert/confirm，不顯示網址列來源字樣） -->
+  <div id="app-modal" class="no-print fixed inset-0 z-50 hidden items-center justify-center p-4" style="background-color:rgba(15,23,42,0.45);">
+    <div class="w-full max-w-md rounded-xl shadow-2xl overflow-hidden" style="background-color:var(--card,#ffffff);color:var(--foreground,#0f172a);border:1px solid var(--border,#cbd5e1);">
+      <div class="px-5 py-3.5 border-b flex items-center justify-between" style="border-color:var(--border,#cbd5e1);">
+        <h3 id="app-modal-title" class="font-bold text-base">系統提示</h3>
+        <button type="button" onclick="closeAppModal(false)" class="text-lg leading-none px-1.5 py-0.5 rounded hover:opacity-70">✕</button>
+      </div>
+      <div id="app-modal-message" class="px-5 py-4 text-sm leading-relaxed whitespace-pre-line"></div>
+      <div class="px-5 py-3 border-t flex justify-end gap-2" style="border-color:var(--border,#cbd5e1);background-color:var(--background,#f8fafc);">
+        <button id="app-modal-cancel" type="button" onclick="closeAppModal(false)"
+          class="hidden px-4 py-1.5 rounded-lg text-sm font-semibold border transition"
+          style="border-color:var(--border,#cbd5e1);background-color:var(--card,#ffffff);color:var(--foreground,#0f172a);">
+          取消
+        </button>
+        <button id="app-modal-ok" type="button" onclick="closeAppModal(true)"
+          class="px-4 py-1.5 rounded-lg text-sm font-semibold transition"
+          style="background-color:#2563eb;color:#ffffff;">
+          確定
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
+
+    let _appModalCallback = null;
+    function closeAppModal(confirmed) {
+      const modal = document.getElementById("app-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+      const cb = _appModalCallback;
+      _appModalCallback = null;
+      if (confirmed && typeof cb === "function") cb();
+    }
+    function showAppAlert(message, title = "系統提示") {
+      const modal = document.getElementById("app-modal");
+      if (!modal) return;
+      document.getElementById("app-modal-title").textContent = title;
+      document.getElementById("app-modal-message").textContent = message;
+      document.getElementById("app-modal-cancel").classList.add("hidden");
+      _appModalCallback = null;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+    function showAppConfirm(message, onConfirm, title = "確認操作") {
+      const modal = document.getElementById("app-modal");
+      if (!modal) return;
+      document.getElementById("app-modal-title").textContent = title;
+      document.getElementById("app-modal-message").textContent = message;
+      document.getElementById("app-modal-cancel").classList.remove("hidden");
+      _appModalCallback = onConfirm;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
     // =========================================================================
     // 資料模型與預設附圖結構
     // =========================================================================
@@ -2880,10 +2935,10 @@
             syncAllFormsFromState();
             renderAll();
           } else {
-            alert("檔案格式不正確，請選擇由本系統儲存的 .json 專案檔。");
+            showAppAlert("檔案格式不正確，請選擇由本系統儲存的 .json 專案檔。");
           }
         } catch (err) {
-          alert("讀取檔案失敗：" + err.message);
+          showAppAlert("讀取檔案失敗：" + err.message);
         }
       };
       reader.readAsText(file);
@@ -3035,13 +3090,13 @@
       try {
         const rendered = await renderChartToCanvas(2);
         if (!rendered || !rendered.canvas) {
-          alert("無法產生圖表影像，請稍後再試。");
+          showAppAlert("無法產生圖表影像，請稍後再試。");
           return;
         }
         const { canvas, width, height } = rendered;
         const pngBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
         if (!pngBlob) {
-          alert("Word 圖表壓縮失敗，請改用「列印 / 另存 PDF」。");
+          showAppAlert("Word 圖表壓縮失敗，請改用「列印 / 另存 PDF」。");
           return;
         }
         const pngBytes = new Uint8Array(await pngBlob.arrayBuffer());
@@ -3261,7 +3316,7 @@
         triggerBlobDownload(zipBlob, `繼承系統表_${decName}.docx`);
       } catch (err) {
         console.error("匯出 Word 失敗：", err);
-        alert("匯出 Word 檔案時發生錯誤，請改用「列印 / 另存 PDF」或「下載圖片」。");
+        showAppAlert("匯出 Word 檔案時發生錯誤，請改用「列印 / 另存 PDF」或「下載圖片」。");
       }
     }
 
@@ -3603,7 +3658,7 @@
         triggerBlobDownload(zipBlob, `繼承系統表_${decName}.xlsx`);
       } catch (err) {
         console.error("匯出 Excel 失敗：", err);
-        alert("匯出 Excel 檔案時發生錯誤，請稍後再試。");
+        showAppAlert("匯出 Excel 檔案時發生錯誤，請稍後再試。");
       }
     }
 
@@ -3790,7 +3845,7 @@
 
         const rendered = await renderChartToCanvas(renderScale);
         if (!rendered || !rendered.canvas) {
-          alert("無法產生圖表影像，請稍後再試。");
+          showAppAlert("無法產生圖表影像，請稍後再試。");
           return;
         }
 
@@ -3889,7 +3944,7 @@
         triggerBlobDownload(pdfBlob, `繼承系統表_${decName}.pdf`);
       } catch (err) {
         console.error("匯出 PDF 失敗：", err);
-        alert("匯出 PDF 檔案時發生錯誤，請改用「列印」或「下載圖片」。");
+        showAppAlert("匯出 PDF 檔案時發生錯誤，請改用「列印」或「下載圖片」。");
       }
     }
 
@@ -4115,7 +4170,7 @@
       try {
         const rendered = await renderChartToCanvas(2);
         if (!rendered || !rendered.canvas) {
-          alert("圖片產生失敗，請改用「列印 / 另存 PDF」輸出高畫質檔案。");
+          showAppAlert("圖片產生失敗，請改用「列印 / 另存 PDF」輸出高畫質檔案。");
           return;
         }
         const { canvas } = rendered;
@@ -4129,14 +4184,14 @@
             if (blob) {
               triggerBlobDownload(blob, `繼承系統表_${decName}.${ext}`);
             } else {
-              alert("圖片產生失敗，請改用「列印 / 另存 PDF」輸出高畫質檔案。");
+              showAppAlert("圖片產生失敗，請改用「列印 / 另存 PDF」輸出高畫質檔案。");
             }
             resolve();
           }, mime, isJpeg ? 0.95 : undefined);
         });
       } catch (err) {
         console.error("匯出圖片失敗：", err);
-        alert("匯出圖片時發生錯誤，請改用「列印 / 另存 PDF」輸出高畫質檔案。");
+        showAppAlert("匯出圖片時發生錯誤，請改用「列印 / 另存 PDF」輸出高畫質檔案。");
       }
     }
 
@@ -4182,36 +4237,41 @@
     }
 
     function clearLocalBrowserData() {
-      if (!confirm("確定要清除本機瀏覽器暫存的系統表資料嗎？\n（清除後將清空畫面，共用電腦使用完畢建議執行此操作）")) return;
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch (e) {
-        // ignore
-      }
-      appState = {
-        config: {
-          chartTitle: "",
-          fontFamily: "font-kai",
-          dateFormat: "roc_full",
-          showEmptyDates: true,
-          showBirthForAll: true,
-          directTextEdit: false
+      showAppConfirm(
+        "確定要清除本機瀏覽器暫存的系統表資料嗎？\n（清除後將清空畫面，共用電腦使用完畢建議執行此操作）",
+        () => {
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch (e) {
+            // ignore
+          }
+          appState = {
+            config: {
+              chartTitle: "",
+              fontFamily: "font-kai",
+              dateFormat: "roc_full",
+              showEmptyDates: true,
+              showBirthForAll: true,
+              directTextEdit: false
+            },
+            decedent: {
+              title: "被繼承人",
+              name: "",
+              idNumber: "",
+              birth: { y: "", m: "", d: "" },
+              death: { y: "", m: "", d: "" },
+              note: ""
+            },
+            spouses: [],
+            heirs: []
+          };
+          selectedNodeId = null;
+          syncAllFormsFromState();
+          renderAll();
+          showAppAlert("已徹底清除本機瀏覽器暫存資料！");
         },
-        decedent: {
-          title: "被繼承人",
-          name: "",
-          idNumber: "",
-          birth: { y: "", m: "", d: "" },
-          death: { y: "", m: "", d: "" },
-          note: ""
-        },
-        spouses: [],
-        heirs: []
-      };
-      selectedNodeId = null;
-      syncAllFormsFromState();
-      renderAll();
-      alert("已徹底清除本機瀏覽器暫存資料！");
+        "清除本機暫存"
+      );
     }
 
     // 視窗大小改變時重繪連接線
