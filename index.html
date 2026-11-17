@@ -529,94 +529,104 @@
 <body class="bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] antialiased m-0 p-0 min-h-screen lg:h-screen lg:overflow-hidden flex flex-col">
 
   <!-- 頂部導覽與工具列 -->
-  <header class="no-print sticky top-0 z-30 bg-[var(--card,#ffffff)] border-b border-[var(--border,#cbd5e1)] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-lg bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] flex items-center justify-center font-bold text-sm shadow-sm">
+  <header class="no-print sticky top-0 z-30 bg-[var(--card,#ffffff)] border-b border-[var(--border,#cbd5e1)] px-4 py-2 flex flex-wrap items-center justify-between gap-2.5">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
         繼
       </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="text-base font-bold tracking-tight text-[var(--foreground,#0f172a)] leading-tight">
-            繼承系統表產生器
-          </h1>
-          <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold" style="background-color:#dcfce7;color:#166534;border:1px solid #86efac;">
-            🔒 100% 本機離線作業
-          </span>
-        </div>
-        <p class="text-xs text-[var(--muted-foreground,#475569)]">
-          逐一輸入被繼承人、配偶與各代繼承人（含出生／死亡日期與日治年號換算），產出後可點擊圖表修改並匯出 Word / Excel / 圖片 / PDF
-        </p>
+      <div class="flex flex-wrap items-center gap-2">
+        <h1 class="text-base font-bold tracking-tight text-[var(--foreground,#0f172a)] leading-tight">
+          繼承系統表產生器
+        </h1>
+        <span class="px-2 py-0.5 rounded-full text-[11px] font-bold" style="background-color:#dcfce7;color:#166534;border:1px solid #86efac;">
+          🔒 本機離線作業
+        </span>
       </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-1.5 text-xs">
-      <button id="btn-load-sketch" type="button" onclick="loadSketchTemplate()"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition">
-        空白範本
-      </button>
-      <button id="btn-load-demo" type="button" onclick="loadDetailedExample()"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition"
-        title="載入包含配偶、代位繼承、身分證字號、戶籍地與日治時期換算之完整實務範例">
-        完整範例
-      </button>
-      <button id="btn-clear-all" type="button" onclick="resetToBlank()"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--error,#dc2626)] font-bold transition">
-        清空
-      </button>
-      <span class="h-4 w-px bg-[var(--border,#cbd5e1)] mx-0.5"></span>
-      <button id="btn-save-json" type="button" onclick="exportProjectJSON()"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition"
-        title="儲存成專案檔 (.json)，下次可載入繼續修改">
-        儲存 (.json)
-      </button>
-      <label class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition cursor-pointer" title="讀取先前儲存的 .json 專案檔或範例檔">
-        讀取 (.json)
-        <input id="input-load-json" type="file" accept=".json" class="hidden" onchange="importProjectJSON(event)" />
-      </label>
-      <span class="h-4 w-px bg-[var(--border,#cbd5e1)] mx-0.5"></span>
-      <button id="btn-export-word" type="button" onclick="exportAsWord()"
-        class="px-2.5 py-1.5 rounded-md bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] hover:opacity-90 font-bold shadow-sm transition"
-        title="匯出包含「繼承系統表（高畫質圖表）」與「繼承人明細一覽表」之 Word (.docx) 檔案">
-        📄 Word
-      </button>
-      <button id="btn-export-excel" type="button" onclick="exportAsExcel()"
-        style="background-color:#059669;color:#ffffff;"
-        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-bold shadow-sm transition"
-        title="匯出包含「繼承系統表（樹狀排版）」與「繼承人明細一覽表」雙工作表之 Excel (.xlsx) 檔案">
-        📊 Excel
-      </button>
-      <button id="btn-export-jpeg" type="button" onclick="exportAsImage('jpeg')"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--secondary,#e2e8f0)] text-[var(--secondary-foreground,#0f172a)] hover:opacity-90 font-bold transition">
-        🖼️ JPEG
-      </button>
-      <button id="btn-export-png" type="button" onclick="exportAsImage('png')"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] hover:opacity-80 font-bold transition">
-        🏞️ PNG
-      </button>
-      <button id="btn-export-pdf" type="button" onclick="exportAsPdf()"
-        style="background-color:#dc2626;color:#ffffff;"
-        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-bold shadow-sm transition inline-flex items-center gap-1.5"
-        title="直接產出並下載 PDF 檔案（含「繼承系統表」與「繼承人明細一覽表」）">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="8" y1="13" x2="16" y2="13"/>
-          <line x1="8" y1="17" x2="13" y2="17"/>
-        </svg>
-        <span>PDF</span>
-      </button>
-      <button id="btn-print" type="button" onclick="printChart()"
-        style="background-color:#1e293b;color:#ffffff;"
-        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-bold shadow-sm transition"
-        title="開啟印表機列印（自動等比例縮放納入單頁）">
-        🖨️ 列印
-      </button>
-      <span class="h-4 w-px bg-[var(--border,#cbd5e1)] mx-0.5"></span>
-      <button id="btn-toggle-theme" type="button" onclick="toggleTheme()"
-        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition"
-        title="切換介面深色模式／淺色模式（右側繼承系統表白紙維持公文列印底色）">
-        🌙 深色模式
-      </button>
+    <div class="flex flex-wrap items-center gap-2 text-xs">
+      <!-- 群組 1：範本與清空 -->
+      <div class="inline-flex items-center gap-1 p-1 rounded-lg border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)]">
+        <span class="px-1.5 text-[11px] font-bold text-[var(--muted-foreground,#64748b)] select-none">範本</span>
+        <button id="btn-load-sketch" type="button" onclick="loadSketchTemplate()"
+          class="px-2 py-1 rounded-md hover:bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] font-bold transition">
+          空白
+        </button>
+        <button id="btn-load-demo" type="button" onclick="loadDetailedExample()"
+          class="px-2 py-1 rounded-md hover:bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] font-bold transition"
+          title="載入包含配偶、代位繼承、身分證字號、戶籍地與日治時期換算之完整實務範例">
+          完整範例
+        </button>
+        <button id="btn-clear-all" type="button" onclick="resetToBlank()"
+          class="px-2 py-1 rounded-md hover:bg-red-50 text-[var(--error,#dc2626)] font-bold transition">
+          清空
+        </button>
+      </div>
+
+      <!-- 群組 2：專案檔讀寫 -->
+      <div class="inline-flex items-center gap-1 p-1 rounded-lg border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)]">
+        <span class="px-1.5 text-[11px] font-bold text-[var(--muted-foreground,#64748b)] select-none">專案</span>
+        <button id="btn-save-json" type="button" onclick="exportProjectJSON()"
+          class="px-2 py-1 rounded-md hover:bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] font-bold transition"
+          title="儲存成專案檔 (.json)，下次可載入繼續修改">
+          💾 儲存
+        </button>
+        <label class="px-2 py-1 rounded-md hover:bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] font-bold transition cursor-pointer" title="讀取先前儲存的 .json 專案檔或範例檔">
+          📂 讀取
+          <input id="input-load-json" type="file" accept=".json" class="hidden" onchange="importProjectJSON(event)" />
+        </label>
+      </div>
+
+      <!-- 群組 3：檔案匯出 -->
+      <div class="inline-flex items-center gap-1 p-1 rounded-lg border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)]">
+        <span class="px-1.5 text-[11px] font-bold text-[var(--muted-foreground,#64748b)] select-none">匯出</span>
+        <button id="btn-export-word" type="button" onclick="exportAsWord()"
+          class="px-2.5 py-1 rounded-md bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] hover:opacity-90 font-bold shadow-sm transition"
+          title="匯出包含「繼承系統表（高畫質圖表）」與「繼承人明細一覽表」之 Word (.docx) 檔案">
+          📄 Word
+        </button>
+        <button id="btn-export-excel" type="button" onclick="exportAsExcel()"
+          style="background-color:#059669;color:#ffffff;"
+          class="px-2.5 py-1 rounded-md hover:opacity-90 font-bold shadow-sm transition"
+          title="匯出包含「繼承系統表（樹狀排版）」與「繼承人明細一覽表」雙工作表之 Excel (.xlsx) 檔案">
+          📊 Excel
+        </button>
+        <button id="btn-export-pdf" type="button" onclick="exportAsPdf()"
+          style="background-color:#dc2626;color:#ffffff;"
+          class="px-2.5 py-1 rounded-md hover:opacity-90 font-bold shadow-sm transition inline-flex items-center gap-1"
+          title="直接產出並下載 PDF 檔案（含「繼承系統表」與「繼承人明細一覽表」）">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="8" y1="13" x2="16" y2="13"/>
+            <line x1="8" y1="17" x2="13" y2="17"/>
+          </svg>
+          <span>PDF</span>
+        </button>
+        <button id="btn-export-jpeg" type="button" onclick="exportAsImage('jpeg')"
+          class="px-2 py-1 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] hover:opacity-80 font-bold transition">
+          🖼️ JPEG
+        </button>
+        <button id="btn-export-png" type="button" onclick="exportAsImage('png')"
+          class="px-2 py-1 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] hover:opacity-80 font-bold transition">
+          🏞️ PNG
+        </button>
+      </div>
+
+      <!-- 群組 4：列印與外觀 -->
+      <div class="inline-flex items-center gap-1.5">
+        <button id="btn-print" type="button" onclick="printChart()"
+          style="background-color:#1e293b;color:#ffffff;"
+          class="px-2.5 py-1.5 rounded-lg hover:opacity-90 font-bold shadow-sm transition"
+          title="開啟印表機列印（自動等比例縮放納入單頁）">
+          🖨️ 列印
+        </button>
+        <button id="btn-toggle-theme" type="button" onclick="toggleTheme()"
+          class="px-2.5 py-1.5 rounded-lg border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-bold transition"
+          title="切換介面深色模式／淺色模式（右側繼承系統表白紙維持公文列印底色）">
+          🌙 深色模式
+        </button>
+      </div>
     </div>
   </header>
 
