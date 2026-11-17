@@ -1,0 +1,3049 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- 嚴格資安防護策略 (CSP)：從瀏覽器底層強制封鎖任何對外網路連線 (connect-src 'none') 與表單外傳 (form-action 'none') -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data: blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none';" />
+  <title>繼承系統表產生器｜本機離線安全版（支援 Excel / PNG / PDF 匯出與產出後直接修改）</title>
+  <style>
+    :root {
+      --background: #f8fafc;
+      --canvas-bg: #f1f5f9;
+      --foreground: #0f172a;
+      --card: #ffffff;
+      --muted-foreground: #475569;
+      --border: #cbd5e1;
+      --primary: #2563eb;
+      --primary-foreground: #ffffff;
+      --secondary: #e2e8f0;
+      --secondary-foreground: #0f172a;
+      --error: #dc2626;
+      --link: #2563eb;
+      color-scheme: light;
+    }
+
+    html.dark {
+      --background: #0f172a;
+      --canvas-bg: #020617;
+      --foreground: #f1f5f9;
+      --card: #1e293b;
+      --muted-foreground: #94a3b8;
+      --border: #334155;
+      --primary: #3b82f6;
+      --primary-foreground: #ffffff;
+      --secondary: #334155;
+      --secondary-foreground: #f1f5f9;
+      --error: #f87171;
+      --link: #60a5fa;
+      color-scheme: dark;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      border-width: 0;
+      border-style: solid;
+      border-color: var(--border);
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "PingFang TC", "Heiti TC", sans-serif;
+      background-color: var(--background);
+      color: var(--foreground);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: 100%;
+      line-height: inherit;
+      color: inherit;
+      margin: 0;
+    }
+
+    button {
+      cursor: pointer;
+      background: transparent;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+    }
+
+    /* 內建完整工具類別（100% 移除外部 CDN 依賴，離線亦可完美排版） */
+    .min-h-screen { min-height: 100vh; }
+    .min-h-0 { min-height: 0px; }
+    .min-w-0 { min-width: 0px; }
+    .min-w-\[760px\] { min-width: 760px; }
+    .max-h-\[calc\(100vh-57px\)\] { max-height: calc(100vh - 98px); }
+    .w-0 { width: 0px; }
+    .w-px { width: 1px; }
+    .w-2 { width: 0.5rem; }
+    .w-8 { width: 2rem; }
+    .w-10 { width: 2.5rem; }
+    .w-11 { width: 2.75rem; }
+    .w-12 { width: 3rem; }
+    .w-14 { width: 3.5rem; }
+    .w-28 { width: 7rem; }
+    .w-32 { width: 8rem; }
+    .w-full { width: 100%; }
+    .h-0 { height: 0px; }
+    .h-0\.5 { height: 0.125rem; }
+    .h-2 { height: 0.5rem; }
+    .h-4 { height: 1rem; }
+    .h-8 { height: 2rem; }
+
+    .flex { display: flex; }
+    .inline-flex { display: inline-flex; }
+    .inline-block { display: inline-block; }
+    .block { display: block; }
+    .grid { display: grid; }
+    .hidden { display: none !important; }
+
+    .flex-col { flex-direction: column; }
+    .flex-wrap { flex-wrap: wrap; }
+    .flex-1 { flex: 1 1 0%; }
+    .shrink-0 { flex-shrink: 0; }
+
+    .items-start { align-items: flex-start; }
+    .items-center { align-items: center; }
+    .items-end { align-items: flex-end; }
+    .items-baseline { align-items: baseline; }
+    .justify-start { justify-content: flex-start; }
+    .justify-center { justify-content: center; }
+    .justify-end { justify-content: flex-end; }
+    .justify-between { justify-content: space-between; }
+
+    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+    .col-span-4 { grid-column: span 4 / span 4; }
+    .col-span-5 { grid-column: span 5 / span 5; }
+    .col-span-7 { grid-column: span 7 / span 7; }
+    .col-span-8 { grid-column: span 8 / span 8; }
+    .col-span-12 { grid-column: span 12 / span 12; }
+
+    @media (min-width: 768px) {
+      .md\:p-8 { padding: 2rem; }
+      .md\:p-12 { padding: 3rem; }
+    }
+    @media (min-width: 1024px) {
+      .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+      .lg\:col-span-5 { grid-column: span 5 / span 5; }
+      .lg\:col-span-7 { grid-column: span 7 / span 7; }
+    }
+    @media (min-width: 1280px) {
+      .xl\:col-span-4 { grid-column: span 4 / span 4; }
+      .xl\:col-span-8 { grid-column: span 8 / span 8; }
+    }
+
+    .gap-0 { gap: 0px; }
+    .gap-1 { gap: 0.25rem; }
+    .gap-1\.5 { gap: 0.375rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-2\.5 { gap: 0.625rem; }
+    .gap-3 { gap: 0.75rem; }
+
+    .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
+    .space-y-1\.5 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.375rem; }
+    .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
+    .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+    .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+    .space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem; }
+
+    .p-0 { padding: 0px; }
+    .p-2 { padding: 0.5rem; }
+    .p-2\.5 { padding: 0.625rem; }
+    .p-3 { padding: 0.75rem; }
+    .p-3\.5 { padding: 0.875rem; }
+    .p-4 { padding: 1rem; }
+    .p-6 { padding: 1.5rem; }
+    .p-8 { padding: 2rem; }
+    .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+    .px-1\.5 { padding-left: 0.375rem; padding-right: 0.375rem; }
+    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-0\.2 { padding-top: 1px; padding-bottom: 1px; }
+    .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+    .pt-1 { padding-top: 0.25rem; }
+    .pt-4 { padding-top: 1rem; }
+    .pb-1 { padding-bottom: 0.25rem; }
+    .pb-2 { padding-bottom: 0.5rem; }
+    .pl-4 { padding-left: 1rem; }
+    .pl-8 { padding-left: 2rem; }
+    .pr-14 { padding-right: 3.5rem; }
+    .pr-16 { padding-right: 4rem; }
+
+    .m-0 { margin: 0px; }
+    .mx-0\.5 { margin-left: 0.125rem; margin-right: 0.125rem; }
+    .ml-1 { margin-left: 0.25rem; }
+    .ml-2 { margin-left: 0.5rem; }
+    .ml-auto { margin-left: auto; }
+    .mr-1 { margin-right: 0.25rem; }
+    .mt-0\.5 { margin-top: 0.125rem; }
+    .mt-1 { margin-top: 0.25rem; }
+    .mt-1\.5 { margin-top: 0.375rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-12 { margin-top: 3rem; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-8 { margin-bottom: 2rem; }
+
+    .relative { position: relative; }
+    .absolute { position: absolute; }
+    .sticky { position: sticky; }
+    .inset-0 { top: 0px; right: 0px; bottom: 0px; left: 0px; }
+    .top-0 { top: 0px; }
+    .-top-6 { top: -1.5rem; }
+    .left-1 { left: 0.25rem; }
+    .z-10 { z-index: 10; }
+    .z-20 { z-index: 20; }
+    .z-30 { z-index: 30; }
+
+    .border { border-width: 1px; }
+    .border-2 { border-width: 2px; }
+    .border-b { border-bottom-width: 1px; }
+    .border-b-2 { border-bottom-width: 2px; }
+    .border-t { border-top-width: 1px; }
+    .border-r { border-right-width: 1px; }
+    .border-dashed { border-style: dashed; }
+    .border-transparent { border-color: transparent; }
+    .border-gray-400 { border-color: #9ca3af; }
+    .border-\[var\(--border\,\#cbd5e1\)\] { border-color: var(--border); }
+    .border-\[var\(--primary\,\#2563eb\)\] { border-color: var(--primary); }
+
+    .rounded { border-radius: 0.25rem; }
+    .rounded-sm { border-radius: 0.125rem; }
+    .rounded-md { border-radius: 0.375rem; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .rounded-full { border-radius: 9999px; }
+
+    .bg-\[var\(--background\,\#f8fafc\)\] { background-color: var(--background); }
+    .bg-\[var\(--background\,\#f1f5f9\)\] { background-color: var(--canvas-bg); }
+    .bg-\[var\(--card\,\#ffffff\)\] { background-color: var(--card); }
+    .bg-\[var\(--primary\,\#2563eb\)\] { background-color: var(--primary); }
+    .bg-\[var\(--secondary\,\#e2e8f0\)\] { background-color: var(--secondary); }
+    .bg-\[var\(--border\,\#cbd5e1\)\] { background-color: var(--border); }
+    .bg-emerald-500 { background-color: #10b981; }
+    .bg-emerald-600 { background-color: #059669; }
+    .bg-slate-800 { background-color: #1e293b; }
+    .privacy-banner {
+      background-color: #ecfdf5;
+      border-bottom: 1px solid #a7f3d0;
+      color: #065f46;
+    }
+    html.dark .privacy-banner {
+      background-color: #064e3b;
+      border-bottom-color: #047857;
+      color: #d1fae5;
+    }
+    html.dark .hover\:bg-red-50:hover {
+      background-color: rgba(239, 68, 68, 0.15);
+    }
+    html.dark .hover\:bg-\[var\(--background\,\#f8fafc\)\]:hover {
+      background-color: var(--background);
+    }
+
+    .text-\[10px\] { font-size: 10px; line-height: 14px; }
+    .text-\[11px\] { font-size: 11px; line-height: 16px; }
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-base { font-size: 1rem; line-height: 1.5rem; }
+    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+    .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .font-bold { font-weight: 700; }
+    .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    .leading-4 { line-height: 1rem; }
+    .leading-tight { line-height: 1.25; }
+    .leading-snug { line-height: 1.375; }
+    .leading-relaxed { line-height: 1.625; }
+
+    .tracking-tight { letter-spacing: -0.025em; }
+    .tracking-wide { letter-spacing: 0.025em; }
+    .tracking-widest { letter-spacing: 0.1em; }
+
+    .text-center { text-align: center; }
+    .text-white { color: #ffffff; }
+    .text-gray-600 { color: #4b5563; }
+    .text-gray-800 { color: #1f2937; }
+    .text-\[var\(--foreground\,\#0f172a\)\] { color: var(--foreground); }
+    .text-\[var\(--muted-foreground\,\#475569\)\] { color: var(--muted-foreground); }
+    .text-\[var\(--primary\,\#2563eb\)\] { color: var(--primary); }
+    .text-\[var\(--primary-foreground\,\#ffffff\)\] { color: var(--primary-foreground); }
+    .text-\[var\(--secondary-foreground\,\#0f172a\)\] { color: var(--secondary-foreground); }
+    .text-\[var\(--error\,\#dc2626\)\] { color: var(--error); }
+    .text-\[var\(--link\,\#2563eb\)\] { color: var(--link); }
+
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .whitespace-nowrap { white-space: nowrap; }
+    .whitespace-pre-line { white-space: pre-line; }
+    .select-none { user-select: none; }
+    .pointer-events-none { pointer-events: none; }
+    .cursor-pointer { cursor: pointer; }
+    .overflow-auto { overflow: auto; }
+    .overflow-y-auto { overflow-y: auto; }
+    .opacity-30 { opacity: 0.3; }
+    .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+    .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); }
+    .transition { transition: all 0.15s ease-in-out; }
+    .accent-\[var\(--primary\,\#2563eb\)\] { accent-color: var(--primary); }
+
+    .hover\:opacity-80:hover { opacity: 0.8; }
+    .hover\:opacity-90:hover { opacity: 0.9; }
+    .hover\:opacity-95:hover { opacity: 0.95; }
+    .hover\:underline:hover { text-decoration: underline; }
+    .hover\:bg-\[var\(--background\,\#f8fafc\)\]:hover { background-color: #f8fafc; }
+    .hover\:bg-\[var\(--secondary\,\#e2e8f0\)\]:hover { background-color: var(--secondary); }
+    .hover\:bg-red-50:hover { background-color: #fef2f2; }
+    .hover\:text-\[var\(--foreground\,\#0f172a\)\]:hover { color: var(--foreground); }
+    .hover\:text-blue-300:hover { color: #93c5fd; }
+    .hover\:text-emerald-300:hover { color: #6ee7b7; }
+    .hover\:text-amber-300:hover { color: #fcd34d; }
+    .hover\:text-red-300:hover { color: #fca5a5; }
+
+    /* 系統表紙張字體設定 */
+    .font-kai {
+      font-family: "DFKai-SB", "BiauKai", "標楷體", "Kaiti TC", "STKaiti", "TW-Kai", serif;
+    }
+    .font-serif-tc {
+      font-family: "PMingLiU", "新細明體", "Songti TC", "Noto Serif TC", Georgia, serif;
+    }
+    .font-sans-tc {
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    }
+
+    /* 紙張畫布樣式（保持白底黑字以利公文檢視、截圖與列印） */
+    .paper-sheet {
+      background-color: #ffffff;
+      color: #111827;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+      border: 1px solid #d1d5db;
+      position: relative;
+      transform-origin: top left;
+    }
+
+    /* 節點互動高亮 */
+    .chart-person-box {
+      position: relative;
+      border-radius: 6px;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chart-person-box:hover {
+      background-color: rgba(37, 99, 235, 0.06);
+      box-shadow: 0 0 0 1.5px rgba(37, 99, 235, 0.45);
+    }
+    .chart-person-box.active-selected {
+      background-color: rgba(37, 99, 235, 0.1);
+      box-shadow: 0 0 0 2px #2563eb;
+    }
+    .chart-person-box .quick-action-bar {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+    }
+    .chart-person-box:hover .quick-action-bar,
+    .chart-person-box.active-selected .quick-action-bar {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* 直接文字微調模式樣式 */
+    [contenteditable="true"] {
+      outline: 1px dashed rgba(37, 99, 235, 0.5);
+      border-radius: 2px;
+      padding: 0 2px;
+      cursor: text;
+      user-select: text;
+    }
+    [contenteditable="true"]:focus {
+      outline: 2px solid #2563eb;
+      background-color: rgba(254, 249, 195, 0.7);
+    }
+
+    /* 列印專用樣式（修正跨頁與外層容器截斷問題） */
+    @media print {
+      html, body, main, section {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        display: block !important;
+        background: #ffffff !important;
+      }
+      .no-print,
+      .quick-action-bar {
+        display: none !important;
+      }
+      #printable-area {
+        position: static !important;
+        width: auto !important;
+        margin: 0 !important;
+        padding: 16px !important;
+        box-shadow: none !important;
+        border: none !important;
+        transform: none !important;
+      }
+      .chart-person-box {
+        box-shadow: none !important;
+        background: transparent !important;
+      }
+      [contenteditable="true"] {
+        outline: none !important;
+        background: transparent !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] antialiased m-0 p-0 min-h-screen flex flex-col">
+
+  <!-- 頂部導覽與工具列 -->
+  <header class="no-print sticky top-0 z-30 bg-[var(--card,#ffffff)] border-b border-[var(--border,#cbd5e1)] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] flex items-center justify-center font-bold text-sm shadow-sm">
+        繼
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold tracking-tight text-[var(--foreground,#0f172a)] leading-tight">
+            繼承系統表產生器
+          </h1>
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold" style="background-color:#dcfce7;color:#166534;border:1px solid #86efac;">
+            🔒 100% 本機離線作業
+          </span>
+        </div>
+        <p class="text-xs text-[var(--muted-foreground,#475569)]">
+          逐一輸入被繼承人、配偶與各代繼承人（含出生／死亡日期），產出後可隨時點擊圖表修改並匯出 Excel / 圖片 / PDF
+        </p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 text-xs">
+      <button id="btn-load-sketch" type="button" onclick="loadSketchTemplate()"
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-medium transition">
+        載入附圖結構範本
+      </button>
+      <button id="btn-load-demo" type="button" onclick="loadDetailedExample()"
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-medium transition">
+        載入含日期實務範例
+      </button>
+      <button id="btn-clear-all" type="button" onclick="resetToBlank()"
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--error,#dc2626)] font-medium transition">
+        清空從頭輸入
+      </button>
+      <span class="h-4 w-px bg-[var(--border,#cbd5e1)] mx-0.5"></span>
+      <button id="btn-save-json" type="button" onclick="exportProjectJSON()"
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-medium transition"
+        title="儲存成檔案，下次可載入繼續修改">
+        儲存專案檔 (.json)
+      </button>
+      <label class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-medium transition cursor-pointer">
+        讀取專案檔
+        <input id="input-load-json" type="file" accept=".json" class="hidden" onchange="importProjectJSON(event)" />
+      </label>
+      <span class="h-4 w-px bg-[var(--border,#cbd5e1)] mx-0.5"></span>
+      <button id="btn-export-excel" type="button" onclick="exportAsExcel()"
+        class="px-3 py-1.5 rounded-md bg-emerald-600 text-white hover:opacity-90 font-semibold shadow-sm transition"
+        title="匯出包含「繼承系統表（圖表排版）」與「繼承人明細清單」雙工作表之 Excel (.xlsx) 檔案">
+        📊 匯出 Excel (.xlsx)
+      </button>
+      <button id="btn-export-png" type="button" onclick="exportAsPNG()"
+        class="px-3 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--secondary,#e2e8f0)] text-[var(--secondary-foreground,#0f172a)] hover:opacity-90 font-semibold transition">
+        下載圖片 (PNG)
+      </button>
+      <button id="btn-print" type="button" onclick="printChart()"
+        class="px-3 py-1.5 rounded-md bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] hover:opacity-90 font-semibold shadow-sm transition">
+        列印 / 另存 PDF
+      </button>
+      <span class="h-4 w-px bg-[var(--border,#cbd5e1)] mx-0.5"></span>
+      <button id="btn-toggle-theme" type="button" onclick="toggleTheme()"
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] hover:opacity-80 text-[var(--foreground,#0f172a)] font-medium transition"
+        title="切換介面深色模式／淺色模式（右側繼承系統表白紙維持公文列印底色）">
+        🌙 深色模式
+      </button>
+    </div>
+  </header>
+
+  <!-- 資安與隱私保護警示橫幅（列印時自動隱藏） -->
+  <div class="no-print privacy-banner px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+    <div class="flex items-center gap-2">
+      <span class="font-bold">🛡️ 【資料安全與隱私保護聲明】</span>
+      <span>
+        本系統所有資料（姓名、出生／死亡年月日、備註等）<strong>只會在您的本機電腦瀏覽器中作業，絕不會上傳至網路或任何外部伺服器</strong>（已啟用瀏覽器 CSP 安全策略強制封鎖所有對外連線），離線亦可安心使用。
+      </span>
+    </div>
+    <div class="flex items-center gap-3 shrink-0">
+      <label class="flex items-center gap-1.5 cursor-pointer select-none font-medium" title="若在辦公室公用或他人電腦操作，建議取消勾選，避免關閉網頁後留下暫存紀錄">
+        <input id="chk-local-persist" type="checkbox" checked onchange="toggleLocalStoragePersist(this.checked)" class="accent-[var(--primary,#2563eb)]" />
+        <span>自動暫存於本機瀏覽器</span>
+      </label>
+      <button type="button" onclick="clearLocalBrowserData()"
+        class="px-2 py-0.5 rounded border border-gray-400 bg-[var(--card,#ffffff)] text-[var(--error,#dc2626)] hover:bg-red-50 font-semibold transition"
+        title="立即清除瀏覽器 LocalStorage 中的暫存個資">
+        🗑️ 清除本機暫存
+      </button>
+    </div>
+  </div>
+
+  <!-- 主工作區：左側輸入與編輯面板 + 右側即時繼承系統表預覽 -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-0">
+
+    <!-- 左側控制與逐一輸入欄 (5/12) -->
+    <aside class="no-print lg:col-span-5 xl:col-span-4 border-r border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] flex flex-col max-h-[calc(100vh-57px)] overflow-y-auto">
+
+      <!-- 分頁切換 -->
+      <div class="grid grid-cols-3 border-b border-[var(--border,#cbd5e1)] text-xs font-semibold sticky top-0 bg-[var(--card,#ffffff)] z-20">
+        <button id="tab-btn-decedent" type="button" onclick="switchTab('decedent')"
+          class="py-2.5 px-2 border-b-2 border-[var(--primary,#2563eb)] text-[var(--primary,#2563eb)] text-center transition">
+          1. 被繼承人與配偶
+        </button>
+        <button id="tab-btn-heirs" type="button" onclick="switchTab('heirs')"
+          class="py-2.5 px-2 border-b-2 border-transparent text-[var(--muted-foreground,#475569)] hover:text-[var(--foreground,#0f172a)] text-center transition">
+          2. 逐一輸入繼承人
+        </button>
+        <button id="tab-btn-style" type="button" onclick="switchTab('style')"
+          class="py-2.5 px-2 border-b-2 border-transparent text-[var(--muted-foreground,#475569)] hover:text-[var(--foreground,#0f172a)] text-center transition">
+          3. 版面與格式設定
+        </button>
+      </div>
+
+      <div class="p-4 space-y-5 flex-1">
+
+        <!-- ==================== 分頁 1：被繼承人與配偶 ==================== -->
+        <section id="tab-panel-decedent" class="space-y-4">
+          <div class="p-3.5 rounded-lg border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] space-y-3">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-bold text-[var(--foreground,#0f172a)] flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[var(--primary,#2563eb)]"></span>
+                被繼承人資料
+              </h2>
+              <span class="text-xs text-[var(--muted-foreground,#475569)]">即過世之本家當事人</span>
+            </div>
+
+            <div class="grid grid-cols-12 gap-2.5 text-xs">
+              <div class="col-span-5">
+                <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">稱謂標頭</label>
+                <input id="dec-title" type="text" value="被繼承人" oninput="updateDecedentFromForm()"
+                  class="w-full px-2.5 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)]" />
+              </div>
+              <div class="col-span-7">
+                <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">被繼承人姓名</label>
+                <input id="dec-name" type="text" placeholder="例如：王大明 或 ○○○" oninput="updateDecedentFromForm()"
+                  class="w-full px-2.5 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] font-semibold" />
+              </div>
+            </div>
+
+            <!-- 被繼承人出生日期 -->
+            <div class="space-y-1 text-xs">
+              <div class="flex items-center justify-between">
+                <label class="text-[var(--muted-foreground,#475569)] font-medium">出生年月日</label>
+                <span class="text-[var(--muted-foreground,#475569)] text-[11px]">支援民國年或右側日曆選取</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[var(--muted-foreground,#475569)] shrink-0">民國</span>
+                <input id="dec-birth-y" type="text" placeholder="年" oninput="syncDateFields('dec-birth', 'roc')"
+                  class="w-14 px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>年</span>
+                <input id="dec-birth-m" type="text" placeholder="月" oninput="syncDateFields('dec-birth', 'roc')"
+                  class="w-11 px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>月</span>
+                <input id="dec-birth-d" type="text" placeholder="日" oninput="syncDateFields('dec-birth', 'roc')"
+                  class="w-11 px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>日</span>
+                <input id="dec-birth-iso" type="date" onchange="syncDateFields('dec-birth', 'iso')"
+                  class="ml-auto px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-xs w-32" title="用西元日曆選取自動換算民國" />
+              </div>
+            </div>
+
+            <!-- 被繼承人死亡日期 -->
+            <div class="space-y-1 text-xs">
+              <div class="flex items-center justify-between">
+                <label class="text-[var(--muted-foreground,#475569)] font-medium">死亡年月日</label>
+                <span class="text-[var(--muted-foreground,#475569)] text-[11px]">系統表橫線將從此處延伸至子女欄</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[var(--muted-foreground,#475569)] shrink-0">民國</span>
+                <input id="dec-death-y" type="text" placeholder="年" oninput="syncDateFields('dec-death', 'roc')"
+                  class="w-14 px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>年</span>
+                <input id="dec-death-m" type="text" placeholder="月" oninput="syncDateFields('dec-death', 'roc')"
+                  class="w-11 px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>月</span>
+                <input id="dec-death-d" type="text" placeholder="日" oninput="syncDateFields('dec-death', 'roc')"
+                  class="w-11 px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>日</span>
+                <input id="dec-death-iso" type="date" onchange="syncDateFields('dec-death', 'iso')"
+                  class="ml-auto px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-xs w-32" title="用西元日曆選取自動換算民國" />
+              </div>
+            </div>
+
+            <div class="text-xs">
+              <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">備註 / 身分證字號（選填）</label>
+              <input id="dec-note" type="text" placeholder="例如：身分證字號、最後住所或註記（可留空）" oninput="updateDecedentFromForm()"
+                class="w-full px-2.5 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)]" />
+            </div>
+          </div>
+
+          <!-- 配偶資料管理區塊 -->
+          <div class="p-3.5 rounded-lg border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-sm font-bold text-[var(--foreground,#0f172a)] flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[var(--primary,#2563eb)]"></span>
+                  配偶資料（顯示於被繼承人下方）
+                </h2>
+                <p class="text-xs text-[var(--muted-foreground,#475569)] mt-0.5">
+                  如同您的附圖，配偶會排列在左下方區塊
+                </p>
+              </div>
+              <button type="button" onclick="addSpouse()"
+                class="px-2.5 py-1 rounded bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] text-xs font-medium hover:opacity-90 transition">
+                ＋ 新增配偶
+              </button>
+            </div>
+
+            <div id="spouse-list-container" class="space-y-3"></div>
+          </div>
+
+          <div class="pt-1 flex justify-end">
+            <button type="button" onclick="switchTab('heirs')"
+              class="w-full py-2 px-4 rounded-md bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] text-xs font-semibold hover:opacity-90 transition">
+              下一步：逐一輸入子女與各代繼承人 →
+            </button>
+          </div>
+        </section>
+
+        <!-- ==================== 分頁 2：逐一輸入繼承人 ==================== -->
+        <section id="tab-panel-heirs" class="space-y-4 hidden">
+          <!-- 新增／修改繼承人表單 -->
+          <div id="heir-form-card" class="p-3.5 rounded-lg border-2 border-[var(--primary,#2563eb)] bg-[var(--background,#f8fafc)] space-y-3">
+            <div class="flex items-center justify-between border-b border-[var(--border,#cbd5e1)] pb-2">
+              <h2 id="heir-form-heading" class="text-sm font-bold text-[var(--foreground,#0f172a)]">
+                ＋ 逐一輸入繼承人（新增成員）
+              </h2>
+              <button id="btn-cancel-edit" type="button" onclick="resetHeirForm()"
+                class="hidden px-2 py-0.5 rounded bg-[var(--secondary,#e2e8f0)] text-[var(--foreground,#0f172a)] text-xs font-medium">
+                取消修改（切換回新增）
+              </button>
+            </div>
+
+            <input type="hidden" id="heir-editing-id" value="" />
+
+            <!-- 1. 選擇歸屬上層（被繼承人的子女，或某位子女的下一代） -->
+            <div class="text-xs space-y-1">
+              <label class="block text-[var(--muted-foreground,#475569)] font-semibold">
+                ① 歸屬上層親屬（這是誰的子女／繼承人？）
+              </label>
+              <select id="heir-parent-id" onchange="autoSuggestTitle()"
+                class="w-full px-2.5 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] font-medium">
+                <option value="root">被繼承人之第一代繼承人（如：長子、次子、長女...）</option>
+              </select>
+              <p class="text-[11px] text-[var(--muted-foreground,#475569)]">
+                若要像附圖一樣在「長子」右側再拉出下一代「長子、次子」，請在此下拉選單選擇「長子」即可！
+              </p>
+            </div>
+
+            <!-- 2. 稱謂與快速選取 -->
+            <div class="text-xs space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label class="text-[var(--muted-foreground,#475569)] font-semibold">② 稱謂與姓名</label>
+                <div class="flex flex-wrap gap-1">
+                  <button type="button" onclick="setQuickTitle('長子')" class="px-1.5 py-0.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">長子</button>
+                  <button type="button" onclick="setQuickTitle('次子')" class="px-1.5 py-0.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">次子</button>
+                  <button type="button" onclick="setQuickTitle('參子')" class="px-1.5 py-0.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">參子</button>
+                  <button type="button" onclick="setQuickTitle('四子')" class="px-1.5 py-0.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">四子</button>
+                  <button type="button" onclick="setQuickTitle('長女')" class="px-1.5 py-0.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">長女</button>
+                  <button type="button" onclick="setQuickTitle('次女')" class="px-1.5 py-0.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">次女</button>
+                  <button type="button" onclick="setQuickTitle('參女')" class="px-1.5 py-0.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">參女</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-12 gap-2">
+                <div class="col-span-5">
+                  <input id="heir-title" type="text" placeholder="稱謂（如：長子）"
+                    class="w-full px-2.5 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] font-medium" />
+                </div>
+                <div class="col-span-7">
+                  <input id="heir-name" type="text" placeholder="姓名（如：王小明 或 ○○○）"
+                    class="w-full px-2.5 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] font-semibold" />
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. 出生年月日 -->
+            <div class="space-y-1 text-xs">
+              <label class="block text-[var(--muted-foreground,#475569)] font-semibold">③ 出生年月日（選填）</label>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[var(--muted-foreground,#475569)] shrink-0">民國</span>
+                <input id="heir-birth-y" type="text" placeholder="年" oninput="syncDateFields('heir-birth', 'roc', false)"
+                  class="w-14 px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>年</span>
+                <input id="heir-birth-m" type="text" placeholder="月" oninput="syncDateFields('heir-birth', 'roc', false)"
+                  class="w-11 px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>月</span>
+                <input id="heir-birth-d" type="text" placeholder="日" oninput="syncDateFields('heir-birth', 'roc', false)"
+                  class="w-11 px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>日</span>
+                <input id="heir-birth-iso" type="date" onchange="syncDateFields('heir-birth', 'iso', false)"
+                  class="ml-auto px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-xs w-32" />
+              </div>
+            </div>
+
+            <!-- 4. 死亡年月日（如在世可留空） -->
+            <div class="space-y-1 text-xs">
+              <div class="flex items-center justify-between">
+                <label class="text-[var(--muted-foreground,#475569)] font-semibold">④ 死亡年月日（在世者請留空）</label>
+                <button type="button" onclick="clearDateInputs('heir-death')" class="text-[11px] text-[var(--link,#2563eb)] hover:underline">清除死亡日期</button>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[var(--muted-foreground,#475569)] shrink-0">民國</span>
+                <input id="heir-death-y" type="text" placeholder="年" oninput="syncDateFields('heir-death', 'roc', false)"
+                  class="w-14 px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>年</span>
+                <input id="heir-death-m" type="text" placeholder="月" oninput="syncDateFields('heir-death', 'roc', false)"
+                  class="w-11 px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>月</span>
+                <input id="heir-death-d" type="text" placeholder="日" oninput="syncDateFields('heir-death', 'roc', false)"
+                  class="w-11 px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
+                <span>日</span>
+                <input id="heir-death-iso" type="date" onchange="syncDateFields('heir-death', 'iso', false)"
+                  class="ml-auto px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-xs w-32" />
+              </div>
+            </div>
+
+            <!-- 5. 備註 / 狀態 與 間隔點（⋮）設定 -->
+            <div class="grid grid-cols-12 gap-2 text-xs pt-1">
+              <div class="col-span-7">
+                <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">狀態或備註（選填）</label>
+                <input id="heir-note" type="text" placeholder="如：歿、拋棄繼承、代位繼承..."
+                  class="w-full px-2.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)]" />
+              </div>
+              <div class="col-span-5 flex items-end pb-1">
+                <label class="flex items-center gap-1.5 cursor-pointer select-none text-[var(--foreground,#0f172a)]">
+                  <input id="heir-dots-after" type="checkbox" class="rounded accent-[var(--primary,#2563eb)]" />
+                  <span>下方顯示「⋮」省略號</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="pt-1 flex gap-2">
+              <button id="btn-submit-heir" type="button" onclick="submitHeirForm()"
+                class="flex-1 py-2 px-3 rounded-md bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] text-xs font-bold shadow-sm hover:opacity-90 transition">
+                ＋ 加入繼承系統表
+              </button>
+            </div>
+          </div>
+
+          <!-- 已輸入之繼承人樹狀清單（可點擊修改、新增子代、上下移動、刪除） -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold text-[var(--foreground,#0f172a)]">
+                目前已建立之繼承人清單（點擊任一人員可直接修改或新增其子女）
+              </h3>
+              <span id="heir-count-badge" class="text-xs text-[var(--muted-foreground,#475569)] font-mono">0 人</span>
+            </div>
+            <div id="heir-tree-list" class="space-y-1.5 text-xs"></div>
+          </div>
+        </section>
+
+        <!-- ==================== 分頁 3：版面與格式設定 ==================== -->
+        <section id="tab-panel-style" class="space-y-4 hidden text-xs">
+          <div class="p-3.5 rounded-lg border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] space-y-3">
+            <h2 class="text-sm font-bold text-[var(--foreground,#0f172a)]">系統表標題與外觀設定</h2>
+
+            <div>
+              <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">表頭標題（留空則如手繪附圖不顯示大標題）</label>
+              <input id="cfg-chart-title" type="text" placeholder="例如：繼承系統表（可留空）" oninput="updateConfigFromForm()"
+                class="w-full px-2.5 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)]" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">字體樣式</label>
+                <select id="cfg-font-family" onchange="updateConfigFromForm()"
+                  class="w-full px-2 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)]">
+                  <option value="font-kai">標楷體 / 楷書（公文與手寫感）</option>
+                  <option value="font-serif-tc">明體 / 宋體（傳統表單）</option>
+                  <option value="font-sans-tc">黑體（現代清晰）</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">日期顯示格式</label>
+                <select id="cfg-date-format" onchange="updateConfigFromForm()"
+                  class="w-full px-2 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)]">
+                  <option value="roc_full">民國 XX 年 XX 月 XX 日</option>
+                  <option value="roc_short">民國 XX.XX.XX</option>
+                  <option value="iso">西元 YYYY-MM-DD</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-1">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input id="cfg-show-empty-dates" type="checkbox" onchange="updateConfigFromForm()" class="accent-[var(--primary,#2563eb)]" />
+                <span>未填寫之出生／死亡日期仍顯示空白欄位（如：`死亡日期：　　　`）</span>
+              </label>
+
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input id="cfg-show-birth-for-all" type="checkbox" checked onchange="updateConfigFromForm()" class="accent-[var(--primary,#2563eb)]" />
+                <span>顯示所有人員已填寫之出生年月日與死亡日期</span>
+              </label>
+
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input id="cfg-direct-text-edit" type="checkbox" onchange="toggleDirectTextEdit()" class="accent-[var(--primary,#2563eb)]" />
+                <span class="font-semibold text-[var(--primary,#2563eb)]">開啟「圖表文字直接打字微調模式」（直接在右圖點字修改並自動同步保存）</span>
+              </label>
+
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input id="cfg-show-legal-footer" type="checkbox" onchange="updateConfigFromForm()" class="accent-[var(--primary,#2563eb)]" />
+                <span>底部顯示台灣繼承登記／國稅局申報法條切結語與簽章欄</span>
+              </label>
+            </div>
+
+            <div id="cfg-legal-text-wrap" class="hidden space-y-1 pt-1">
+              <label class="block text-[var(--muted-foreground,#475569)] font-medium">底部切結語內容（可自行修改）</label>
+              <textarea id="cfg-legal-text" rows="3" oninput="updateConfigFromForm()"
+                class="w-full p-2 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-xs">以上繼承系統表係依民法第1138條至第1140條規定編製，如有遺漏或錯誤致他人受損害者，申請人願負法律責任，並保證與戶籍謄本記載相符。
+中 華 民 國 　　　 年 　　 月 　　 日　　立表人（繼承人）：　　　　　　（簽章）</textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- 左欄底部本機離線安全保證卡 -->
+        <div class="p-3 rounded-lg border text-xs space-y-1" style="background-color:#f8fafc;border-color:#cbd5e1;color:#475569;">
+          <div class="font-bold text-[var(--foreground,#0f172a)]">🔒 資安與個資零外洩承諾</div>
+          <p class="m-0 leading-relaxed">
+            1. 本工具為<strong>純前端單一檔案程式</strong>，無任何後端資料庫或遠端 API，資料只會在本機電腦中作業，絕不會上傳至網路上。<br/>
+            2. 匯出之 <strong>Excel (.xlsx)</strong>、<strong>PNG 圖片</strong>、<strong>PDF</strong> 與 <strong>JSON 專案檔</strong> 均於您的電腦本機記憶體中直接產出下載，不經過任何網路傳輸。
+          </p>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- 右側即時繼承系統表畫布預覽區 (7/12 ~ 8/12) -->
+    <section class="lg:col-span-7 xl:col-span-8 bg-[var(--background,#f1f5f9)] flex flex-col max-h-[calc(100vh-57px)] overflow-auto">
+
+      <!-- 畫布上方提示與縮放列 -->
+      <div class="no-print px-4 py-2 border-b border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 text-[var(--muted-foreground,#475569)]">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>💡 <strong>產出後修改方式：</strong>直接點擊下方圖表中的<strong>任何人名或區塊</strong>，即可修改資料、新增其下一代子女或調整順序！</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[var(--muted-foreground,#475569)]">畫面縮放：</span>
+          <button type="button" onclick="adjustZoom(-0.1)" class="px-2 py-0.5 rounded border border-[var(--border,#cbd5e1)] hover:bg-[var(--secondary,#e2e8f0)]">-</button>
+          <span id="zoom-readout" class="font-mono w-12 text-center">100%</span>
+          <button type="button" onclick="adjustZoom(0.1)" class="px-2 py-0.5 rounded border border-[var(--border,#cbd5e1)] hover:bg-[var(--secondary,#e2e8f0)]">+</button>
+          <button type="button" onclick="resetZoom()" class="px-2 py-0.5 rounded border border-[var(--border,#cbd5e1)] hover:bg-[var(--secondary,#e2e8f0)]">重設</button>
+        </div>
+      </div>
+
+      <!-- 紙張預覽容器 -->
+      <div class="p-6 md:p-8 flex-1 overflow-auto flex justify-start items-start">
+        <div id="printable-area" class="paper-sheet font-kai p-8 md:p-12 min-w-[760px] rounded-sm">
+
+          <!-- 選填表頭標題 -->
+          <div id="chart-header-title" class="text-center text-2xl font-bold tracking-widest mb-8 hidden"></div>
+
+          <!-- 核心繼承系統表繪製區（使用相對定位容器 + 動態精準 SVG 連接線，100% 還原手繪附圖樣式） -->
+          <div id="chart-stage" class="relative inline-flex items-start gap-0">
+            <!-- SVG 線條層（自動根據 DOM 節點位置繪製橫線、垂直幹線與分支短橫線） -->
+            <svg id="chart-lines-svg" class="absolute inset-0 pointer-events-none" style="overflow: visible;"></svg>
+
+            <!-- 左欄：被繼承人 + 配偶 -->
+            <div id="chart-left-column" class="flex flex-col justify-start pr-16 relative z-10" style="min-width: 230px;">
+              <!-- 被繼承人區塊 -->
+              <div id="node-decedent" onclick="selectDecedentForEdit(event)"
+                class="chart-person-box p-2.5 mb-8">
+                <div class="text-xl font-bold tracking-wide leading-snug flex items-baseline gap-2">
+                  <span id="render-dec-title">被繼承人</span>
+                  <span id="render-dec-name">○○○</span>
+                </div>
+                <div id="render-dec-birth-row" class="text-sm mt-1.5 pl-4 text-gray-800"></div>
+                <div id="render-dec-death-row" class="text-base mt-1 pl-4 font-medium flex items-center">
+                  <span id="render-dec-death-text">死亡日期：</span>
+                  <!-- 橫線起點錨點（緊接在死亡日期文字右側，完全比照手繪附圖！） -->
+                  <span id="decedent-line-anchor" class="inline-block w-2 h-0.5 ml-2"></span>
+                </div>
+                <div id="render-dec-note-row" class="text-xs mt-1 pl-4 text-gray-600 hidden"></div>
+              </div>
+
+              <!-- 配偶區塊（排列於被繼承人正下方，完全比照附圖） -->
+              <div id="render-spouses-container" class="space-y-5 mt-2"></div>
+            </div>
+
+            <!-- 右側：第一代及後續各代繼承人遞迴樹區 -->
+            <div id="chart-heirs-root" class="relative z-10 flex items-start"></div>
+          </div>
+
+          <!-- 選填底部法律切結與簽章欄 -->
+          <div id="chart-legal-footer" class="mt-12 pt-4 border-t border-gray-400 text-sm leading-relaxed whitespace-pre-line hidden"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // 資料模型與預設附圖結構
+    // =========================================================================
+    let appState = {
+      config: {
+        chartTitle: "",
+        fontFamily: "font-kai",
+        dateFormat: "roc_full",
+        showEmptyDates: true,
+        showBirthForAll: true,
+        directTextEdit: false,
+        showLegalFooter: false,
+        legalText: "以上繼承系統表係依民法第1138條至第1140條規定編製，如有遺漏或錯誤致他人受損害者，申請人願負法律責任，並保證與戶籍謄本記載相符。\n中 華 民 國 　　　 年 　　 月 　　 日　　立表人（繼承人）：　　　　　　（簽章）"
+      },
+      decedent: {
+        title: "被繼承人",
+        name: "○○○",
+        birth: { y: "", m: "", d: "" },
+        death: { y: "", m: "", d: "" },
+        note: ""
+      },
+      spouses: [
+        {
+          id: "sp-1",
+          title: "配偶",
+          name: "○○○",
+          birth: { y: "", m: "", d: "" },
+          death: { y: "", m: "", d: "" },
+          note: ""
+        }
+      ],
+      heirs: []
+    };
+
+    let currentZoom = 1;
+    let selectedNodeId = null;
+    let allowLocalPersistence = true;
+
+    const PERSIST_PREF_KEY = "inheritance_chart_persist_pref_v1";
+
+    // 產生安全唯一 ID（僅含英數字與連字號，防止 DOM 屬性注入）
+    function uid(prefix = "h") {
+      const safePrefix = String(prefix).replace(/[^a-zA-Z0-9_-]/g, "") || "id";
+      return safePrefix + "-" + Math.random().toString(36).substring(2, 8) + Date.now().toString(36).slice(-3);
+    }
+
+    function sanitizeId(rawId, fallbackPrefix = "id") {
+      const cleaned = String(rawId ?? "").replace(/[^a-zA-Z0-9_-]/g, "");
+      return cleaned || uid(fallbackPrefix);
+    }
+
+    // 1. 載入與手繪附圖 100% 相同的範本
+    function getSketchTemplateData() {
+      const eldestSonId = "h-son-1";
+      return {
+        config: {
+          chartTitle: "",
+          fontFamily: "font-kai",
+          dateFormat: "roc_full",
+          showEmptyDates: true,
+          showBirthForAll: true,
+          directTextEdit: false,
+          showLegalFooter: false,
+          legalText: appState.config.legalText
+        },
+        decedent: {
+          title: "被繼承人",
+          name: "○○○",
+          birth: { y: "", m: "", d: "" },
+          death: { y: "", m: "", d: "" },
+          note: ""
+        },
+        spouses: [
+          {
+            id: "sp-1",
+            title: "配偶",
+            name: "○○○",
+            birth: { y: "", m: "", d: "" },
+            death: { y: "", m: "", d: "" },
+            note: ""
+          }
+        ],
+        heirs: [
+          {
+            id: eldestSonId,
+            parentId: "root",
+            title: "長子",
+            name: "○○○",
+            birth: { y: "", m: "", d: "" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: false
+          },
+          {
+            id: "h-son-2",
+            parentId: "root",
+            title: "次子",
+            name: "○○○",
+            birth: { y: "", m: "", d: "" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: false
+          },
+          {
+            id: "h-son-3",
+            parentId: "root",
+            title: "參子",
+            name: "○○○",
+            birth: { y: "", m: "", d: "" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: true
+          },
+          {
+            id: "h-dau-1",
+            parentId: "root",
+            title: "長女",
+            name: "○○○",
+            birth: { y: "", m: "", d: "" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: false
+          },
+          {
+            id: "h-dau-2",
+            parentId: "root",
+            title: "次女",
+            name: "○○○",
+            birth: { y: "", m: "", d: "" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: false
+          },
+          // 長子之下一代（附圖右上角：長子○○○、次子○○○、⋮）
+          {
+            id: "h-grandson-1",
+            parentId: eldestSonId,
+            title: "長子",
+            name: "○○○",
+            birth: { y: "", m: "", d: "" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: false
+          },
+          {
+            id: "h-grandson-2",
+            parentId: eldestSonId,
+            title: "次子",
+            name: "○○○",
+            birth: { y: "", m: "", d: "" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: true
+          }
+        ]
+      };
+    }
+
+    // 2. 載入含完整出生／死亡年月日之實務範例
+    function getDetailedExampleData() {
+      const eldestSonId = "h-son-1";
+      return {
+        config: {
+          chartTitle: "繼 承 系 統 表",
+          fontFamily: "font-kai",
+          dateFormat: "roc_full",
+          showEmptyDates: false,
+          showBirthForAll: true,
+          directTextEdit: false,
+          showLegalFooter: true,
+          legalText: appState.config.legalText
+        },
+        decedent: {
+          title: "被繼承人",
+          name: "陳萬福",
+          birth: { y: "22", m: "04", d: "12" },
+          death: { y: "115", m: "10", d: "08" },
+          note: ""
+        },
+        spouses: [
+          {
+            id: "sp-1",
+            title: "配偶",
+            name: "林秀琴",
+            birth: { y: "26", m: "09", d: "20" },
+            death: { y: "", m: "", d: "" },
+            note: "存（繼承人）"
+          }
+        ],
+        heirs: [
+          {
+            id: eldestSonId,
+            parentId: "root",
+            title: "長子",
+            name: "陳建宏",
+            birth: { y: "48", m: "02", d: "15" },
+            death: { y: "110", m: "06", d: "03" },
+            note: "先歿（由子代位繼承）",
+            dotsAfter: false
+          },
+          {
+            id: "h-son-2",
+            parentId: "root",
+            title: "次子",
+            name: "陳建志",
+            birth: { y: "50", m: "11", d: "28" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: false
+          },
+          {
+            id: "h-son-3",
+            parentId: "root",
+            title: "參子",
+            name: "陳建銘",
+            birth: { y: "53", m: "07", d: "09" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: false
+          },
+          {
+            id: "h-dau-1",
+            parentId: "root",
+            title: "長女",
+            name: "陳淑芬",
+            birth: { y: "55", m: "03", d: "19" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: false
+          },
+          {
+            id: "h-dau-2",
+            parentId: "root",
+            title: "次女",
+            name: "陳淑惠",
+            birth: { y: "58", m: "12", d: "05" },
+            death: { y: "", m: "", d: "" },
+            note: "",
+            dotsAfter: false
+          },
+          {
+            id: "h-grandson-1",
+            parentId: eldestSonId,
+            title: "長子",
+            name: "陳冠宇",
+            birth: { y: "78", m: "05", d: "10" },
+            death: { y: "", m: "", d: "" },
+            note: "代位繼承人",
+            dotsAfter: false
+          },
+          {
+            id: "h-grandson-2",
+            parentId: eldestSonId,
+            title: "次子",
+            name: "陳冠廷",
+            birth: { y: "81", m: "08", d: "22" },
+            death: { y: "", m: "", d: "" },
+            note: "代位繼承人",
+            dotsAfter: false
+          }
+        ]
+      };
+    }
+
+    function loadSketchTemplate() {
+      appState = getSketchTemplateData();
+      selectedNodeId = null;
+      syncAllFormsFromState();
+      renderAll();
+    }
+
+    function loadDetailedExample() {
+      appState = getDetailedExampleData();
+      selectedNodeId = null;
+      syncAllFormsFromState();
+      renderAll();
+    }
+
+    function resetToBlank() {
+      appState = {
+        config: {
+          ...appState.config
+        },
+        decedent: {
+          title: "被繼承人",
+          name: "",
+          birth: { y: "", m: "", d: "" },
+          death: { y: "", m: "", d: "" },
+          note: ""
+        },
+        spouses: [
+          {
+            id: uid("sp"),
+            title: "配偶",
+            name: "",
+            birth: { y: "", m: "", d: "" },
+            death: { y: "", m: "", d: "" },
+            note: ""
+          }
+        ],
+        heirs: []
+      };
+      selectedNodeId = null;
+      syncAllFormsFromState();
+      resetHeirForm();
+      switchTab("decedent");
+      renderAll();
+    }
+
+    // =========================================================================
+    // 日期格式化與民國／西元雙向換算
+    // =========================================================================
+    function hasDate(dObj) {
+      return Boolean(dObj && (String(dObj.y).trim() || String(dObj.m).trim() || String(dObj.d).trim()));
+    }
+
+    function formatDateObj(dObj) {
+      if (!hasDate(dObj)) return "";
+      const y = String(dObj.y || "").trim();
+      const m = String(dObj.m || "").trim();
+      const d = String(dObj.d || "").trim();
+      const fmt = appState.config.dateFormat;
+
+      if (fmt === "iso") {
+        const gregY = y && !isNaN(Number(y)) ? Number(y) + 1911 : y;
+        const mm = m ? m.padStart(2, "0") : "  ";
+        const dd = d ? d.padStart(2, "0") : "  ";
+        return `${gregY}-${mm}-${dd}`;
+      }
+      if (fmt === "roc_short") {
+        return `民國 ${y || "  "}.${m ? m.padStart(2, "0") : "  "}.${d ? d.padStart(2, "0") : "  "}`;
+      }
+      // 預設：民國 XX 年 XX 月 XX 日
+      let parts = "民國 ";
+      parts += (y ? `${y} 年 ` : "　　年 ");
+      parts += (m ? `${m} 月 ` : "　月 ");
+      parts += (d ? `${d} 日` : "　日");
+      return parts;
+    }
+
+    function rocToIsoString(dObj) {
+      if (!dObj) return "";
+      const ry = parseInt(dObj.y, 10);
+      const rm = parseInt(dObj.m, 10);
+      const rd = parseInt(dObj.d, 10);
+      if (!isNaN(ry) && !isNaN(rm) && !isNaN(rd) && rm >= 1 && rm <= 12 && rd >= 1 && rd <= 31) {
+        const gy = ry + 1911;
+        if (gy > 1000 && gy < 3000) {
+          return `${String(gy).padStart(4, "0")}-${String(rm).padStart(2, "0")}-${String(rd).padStart(2, "0")}`;
+        }
+      }
+      return "";
+    }
+
+    function syncDateFields(prefix, source, triggerDecedentSave = true) {
+      const yEl = document.getElementById(`${prefix}-y`);
+      const mEl = document.getElementById(`${prefix}-m`);
+      const dEl = document.getElementById(`${prefix}-d`);
+      const isoEl = document.getElementById(`${prefix}-iso`);
+
+      if (source === "iso" && isoEl && isoEl.value) {
+        const [gy, gm, gd] = isoEl.value.split("-").map(Number);
+        if (gy && gm && gd) {
+          yEl.value = String(gy - 1911);
+          mEl.value = String(gm).padStart(2, "0");
+          dEl.value = String(gd).padStart(2, "0");
+        }
+      } else if (source === "roc" && isoEl) {
+        isoEl.value = rocToIsoString({ y: yEl?.value, m: mEl?.value, d: dEl?.value });
+      }
+
+      if (triggerDecedentSave && (prefix === "dec-birth" || prefix === "dec-death")) {
+        updateDecedentFromForm();
+      }
+    }
+
+    function setDateInputs(prefix, dObj) {
+      const yEl = document.getElementById(`${prefix}-y`);
+      const mEl = document.getElementById(`${prefix}-m`);
+      const dEl = document.getElementById(`${prefix}-d`);
+      const isoEl = document.getElementById(`${prefix}-iso`);
+      if (!yEl) return;
+      yEl.value = dObj?.y || "";
+      mEl.value = dObj?.m || "";
+      dEl.value = dObj?.d || "";
+      syncDateFields(prefix, "roc", false);
+      if (!dObj?.y && isoEl) isoEl.value = "";
+    }
+
+    function getDateInputs(prefix) {
+      return {
+        y: (document.getElementById(`${prefix}-y`)?.value || "").trim(),
+        m: (document.getElementById(`${prefix}-m`)?.value || "").trim(),
+        d: (document.getElementById(`${prefix}-d`)?.value || "").trim()
+      };
+    }
+
+    function clearDateInputs(prefix) {
+      setDateInputs(prefix, { y: "", m: "", d: "" });
+    }
+
+    // =========================================================================
+    // 表單與狀態同步
+    // =========================================================================
+    function switchTab(tabName) {
+      ["decedent", "heirs", "style"].forEach((t) => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        const panel = document.getElementById(`tab-panel-${t}`);
+        if (t === tabName) {
+          btn.classList.add("border-[var(--primary,#2563eb)]", "text-[var(--primary,#2563eb)]");
+          btn.classList.remove("border-transparent", "text-[var(--muted-foreground,#475569)]");
+          panel.classList.remove("hidden");
+        } else {
+          btn.classList.remove("border-[var(--primary,#2563eb)]", "text-[var(--primary,#2563eb)]");
+          btn.classList.add("border-transparent", "text-[var(--muted-foreground,#475569)]");
+          panel.classList.add("hidden");
+        }
+      });
+    }
+
+    function syncAllFormsFromState() {
+      // 被繼承人
+      document.getElementById("dec-title").value = appState.decedent.title || "被繼承人";
+      document.getElementById("dec-name").value = appState.decedent.name || "";
+      setDateInputs("dec-birth", appState.decedent.birth);
+      setDateInputs("dec-death", appState.decedent.death);
+      document.getElementById("dec-note").value = appState.decedent.note || "";
+
+      // 設定項
+      document.getElementById("cfg-chart-title").value = appState.config.chartTitle || "";
+      document.getElementById("cfg-font-family").value = appState.config.fontFamily || "font-kai";
+      document.getElementById("cfg-date-format").value = appState.config.dateFormat || "roc_full";
+      document.getElementById("cfg-show-empty-dates").checked = Boolean(appState.config.showEmptyDates);
+      document.getElementById("cfg-show-birth-for-all").checked = Boolean(appState.config.showBirthForAll);
+      document.getElementById("cfg-direct-text-edit").checked = Boolean(appState.config.directTextEdit);
+      document.getElementById("cfg-show-legal-footer").checked = Boolean(appState.config.showLegalFooter);
+      document.getElementById("cfg-legal-text").value = appState.config.legalText || "";
+      document.getElementById("cfg-legal-text-wrap").classList.toggle("hidden", !appState.config.showLegalFooter);
+
+      renderSpouseEditorList();
+      refreshParentDropdown();
+      renderHeirManageList();
+    }
+
+    function updateDecedentFromForm() {
+      appState.decedent.title = document.getElementById("dec-title").value || "被繼承人";
+      appState.decedent.name = document.getElementById("dec-name").value;
+      appState.decedent.birth = getDateInputs("dec-birth");
+      appState.decedent.death = getDateInputs("dec-death");
+      appState.decedent.note = document.getElementById("dec-note").value;
+      renderChart();
+    }
+
+    function updateConfigFromForm() {
+      appState.config.chartTitle = document.getElementById("cfg-chart-title").value;
+      appState.config.fontFamily = document.getElementById("cfg-font-family").value;
+      appState.config.dateFormat = document.getElementById("cfg-date-format").value;
+      appState.config.showEmptyDates = document.getElementById("cfg-show-empty-dates").checked;
+      appState.config.showBirthForAll = document.getElementById("cfg-show-birth-for-all").checked;
+      appState.config.showLegalFooter = document.getElementById("cfg-show-legal-footer").checked;
+      appState.config.legalText = document.getElementById("cfg-legal-text").value;
+      document.getElementById("cfg-legal-text-wrap").classList.toggle("hidden", !appState.config.showLegalFooter);
+      renderChart();
+    }
+
+    function toggleDirectTextEdit() {
+      appState.config.directTextEdit = document.getElementById("cfg-direct-text-edit").checked;
+      renderChart();
+    }
+
+    // =========================================================================
+    // 配偶管理（補齊西元日曆換算與狀態備註欄位）
+    // =========================================================================
+    function renderSpouseEditorList() {
+      const container = document.getElementById("spouse-list-container");
+      if (appState.spouses.length === 0) {
+        container.innerHTML = `<div class="text-xs text-[var(--muted-foreground,#475569)] py-2 text-center border border-dashed border-[var(--border,#cbd5e1)] rounded">目前無配偶資料（可點上方「＋ 新增配偶」）</div>`;
+        return;
+      }
+
+      container.innerHTML = appState.spouses.map((sp, idx) => {
+        const safeId = sanitizeId(sp.id, "sp");
+        sp.id = safeId;
+        const birthIso = rocToIsoString(sp.birth);
+        const deathIso = rocToIsoString(sp.death);
+        const isSelected = selectedNodeId === safeId;
+        return `
+        <div id="spouse-editor-card-${safeId}" class="p-2.5 rounded border ${isSelected ? 'border-2 border-[var(--primary,#2563eb)]' : 'border-[var(--border,#cbd5e1)]'} bg-[var(--card,#ffffff)] space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-[var(--foreground,#0f172a)]">配偶 #${idx + 1}</span>
+            <button type="button" onclick="removeSpouse('${safeId}')" class="text-[var(--error,#dc2626)] hover:underline">移除</button>
+          </div>
+          <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-4">
+              <input type="text" value="${escapeHtml(sp.title)}" placeholder="稱謂(配偶)"
+                oninput="updateSpouseField('${safeId}', 'title', this.value)"
+                class="w-full px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)]" />
+            </div>
+            <div class="col-span-8">
+              <input id="spouse-name-input-${safeId}" type="text" value="${escapeHtml(sp.name)}" placeholder="配偶姓名（如：○○○）"
+                oninput="updateSpouseField('${safeId}', 'name', this.value)"
+                class="w-full px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] font-semibold" />
+            </div>
+          </div>
+          <div class="flex items-center gap-1 flex-wrap">
+            <span class="text-[var(--muted-foreground,#475569)] w-14 shrink-0">出生民國</span>
+            <input id="sp-birth-y-${safeId}" type="text" placeholder="年" value="${escapeHtml(sp.birth?.y || '')}"
+              oninput="updateSpouseDate('${safeId}', 'birth', 'y', this.value)"
+              class="w-12 px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] text-center" />
+            <span>年</span>
+            <input id="sp-birth-m-${safeId}" type="text" placeholder="月" value="${escapeHtml(sp.birth?.m || '')}"
+              oninput="updateSpouseDate('${safeId}', 'birth', 'm', this.value)"
+              class="w-10 px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] text-center" />
+            <span>月</span>
+            <input id="sp-birth-d-${safeId}" type="text" placeholder="日" value="${escapeHtml(sp.birth?.d || '')}"
+              oninput="updateSpouseDate('${safeId}', 'birth', 'd', this.value)"
+              class="w-10 px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] text-center" />
+            <span>日</span>
+            <input id="sp-birth-iso-${safeId}" type="date" value="${birthIso}"
+              onchange="updateSpouseDateIso('${safeId}', 'birth', this.value)"
+              class="ml-auto px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] text-xs w-28" title="西元日曆選取自動換算民國" />
+          </div>
+          <div class="flex items-center gap-1 flex-wrap">
+            <span class="text-[var(--muted-foreground,#475569)] w-14 shrink-0">死亡民國</span>
+            <input id="sp-death-y-${safeId}" type="text" placeholder="年(存留空)" value="${escapeHtml(sp.death?.y || '')}"
+              oninput="updateSpouseDate('${safeId}', 'death', 'y', this.value)"
+              class="w-12 px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] text-center" />
+            <span>年</span>
+            <input id="sp-death-m-${safeId}" type="text" placeholder="月" value="${escapeHtml(sp.death?.m || '')}"
+              oninput="updateSpouseDate('${safeId}', 'death', 'm', this.value)"
+              class="w-10 px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] text-center" />
+            <span>月</span>
+            <input id="sp-death-d-${safeId}" type="text" placeholder="日" value="${escapeHtml(sp.death?.d || '')}"
+              oninput="updateSpouseDate('${safeId}', 'death', 'd', this.value)"
+              class="w-10 px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] text-center" />
+            <span>日</span>
+            <input id="sp-death-iso-${safeId}" type="date" value="${deathIso}"
+              onchange="updateSpouseDateIso('${safeId}', 'death', this.value)"
+              class="ml-auto px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] text-xs w-28" title="西元日曆選取自動換算民國" />
+          </div>
+          <div>
+            <input type="text" value="${escapeHtml(sp.note || '')}" placeholder="配偶狀態或備註（如：存、繼承人、歿... 選填）"
+              oninput="updateSpouseField('${safeId}', 'note', this.value)"
+              class="w-full px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)]" />
+          </div>
+        </div>
+      `;
+      }).join("");
+    }
+
+    function addSpouse() {
+      appState.spouses.push({
+        id: uid("sp"),
+        title: "配偶",
+        name: "○○○",
+        birth: { y: "", m: "", d: "" },
+        death: { y: "", m: "", d: "" },
+        note: ""
+      });
+      renderSpouseEditorList();
+      renderChart();
+    }
+
+    function removeSpouse(id) {
+      appState.spouses = appState.spouses.filter((s) => s.id !== id);
+      renderSpouseEditorList();
+      renderChart();
+    }
+
+    function updateSpouseField(id, field, val) {
+      const sp = appState.spouses.find((s) => s.id === id);
+      if (sp) {
+        sp[field] = val;
+        renderChart();
+      }
+    }
+
+    function updateSpouseDate(id, type, part, val) {
+      const sp = appState.spouses.find((s) => s.id === id);
+      if (sp) {
+        if (!sp[type]) sp[type] = { y: "", m: "", d: "" };
+        sp[type][part] = val.trim();
+        const isoEl = document.getElementById(`sp-${type}-iso-${id}`);
+        if (isoEl) isoEl.value = rocToIsoString(sp[type]);
+        renderChart();
+      }
+    }
+
+    function updateSpouseDateIso(id, type, isoVal) {
+      const sp = appState.spouses.find((s) => s.id === id);
+      if (sp && isoVal) {
+        const [gy, gm, gd] = isoVal.split("-").map(Number);
+        if (gy && gm && gd) {
+          sp[type] = {
+            y: String(gy - 1911),
+            m: String(gm).padStart(2, "0"),
+            d: String(gd).padStart(2, "0")
+          };
+          renderSpouseEditorList();
+          renderChart();
+        }
+      }
+    }
+
+    // =========================================================================
+    // 繼承人（多代樹狀）管理與逐一輸入
+    // =========================================================================
+    const SON_TITLES = ["長子", "次子", "參子", "四子", "五子", "六子", "七子"];
+    const DAU_TITLES = ["長女", "次女", "參女", "四女", "五女", "六女", "七女"];
+
+    function refreshParentDropdown(keepValue = true) {
+      const select = document.getElementById("heir-parent-id");
+      const prevVal = keepValue ? select.value : "root";
+      const editingId = document.getElementById("heir-editing-id").value;
+
+      let optionsHtml = `<option value="root">被繼承人之第一代繼承人（如：長子、次子、長女...）</option>`;
+
+      function buildOptions(parentId, depth, prefixPath) {
+        const children = appState.heirs.filter((h) => h.parentId === parentId);
+        children.forEach((child) => {
+          const safeChildId = sanitizeId(child.id, "h");
+          child.id = safeChildId;
+          if (safeChildId === editingId) return; // 避免選自己當上層
+          const indent = "　".repeat(depth);
+          const label = `${indent}↳ ${prefixPath}${child.title} ${child.name || ""} 之子女（下一代）`;
+          optionsHtml += `<option value="${escapeHtml(safeChildId)}">${escapeHtml(label)}</option>`;
+          buildOptions(safeChildId, depth + 1, `${prefixPath}${child.title}→`);
+        });
+      }
+
+      buildOptions("root", 1, "");
+      select.innerHTML = optionsHtml;
+      if ([...select.options].some((o) => o.value === prevVal)) {
+        select.value = prevVal;
+      } else {
+        select.value = "root";
+      }
+    }
+
+    function autoSuggestTitle() {
+      const editingId = document.getElementById("heir-editing-id").value;
+      if (editingId) return; // 編輯模式不自動覆蓋稱謂
+      const parentId = document.getElementById("heir-parent-id").value;
+      const siblings = appState.heirs.filter((h) => h.parentId === parentId);
+      const sonCount = siblings.filter((s) => s.title.includes("子")).length;
+      const suggested = SON_TITLES[sonCount] || `第${sonCount + 1}子`;
+      document.getElementById("heir-title").value = suggested;
+    }
+
+    function setQuickTitle(titleText) {
+      document.getElementById("heir-title").value = titleText;
+      document.getElementById("heir-name").focus();
+    }
+
+    function submitHeirForm() {
+      const editingId = document.getElementById("heir-editing-id").value;
+      const parentId = document.getElementById("heir-parent-id").value || "root";
+      const title = (document.getElementById("heir-title").value || "").trim() || "繼承人";
+      const name = (document.getElementById("heir-name").value || "").trim() || "○○○";
+      const birth = getDateInputs("heir-birth");
+      const death = getDateInputs("heir-death");
+      const note = (document.getElementById("heir-note").value || "").trim();
+      const dotsAfter = document.getElementById("heir-dots-after").checked;
+
+      if (editingId) {
+        const target = appState.heirs.find((h) => h.id === editingId);
+        if (target) {
+          target.parentId = parentId;
+          target.title = title;
+          target.name = name;
+          target.birth = birth;
+          target.death = death;
+          target.note = note;
+          target.dotsAfter = dotsAfter;
+        }
+      } else {
+        const newHeir = {
+          id: uid("h"),
+          parentId,
+          title,
+          name,
+          birth,
+          death,
+          note,
+          dotsAfter
+        };
+        appState.heirs.push(newHeir);
+        selectedNodeId = newHeir.id;
+      }
+
+      resetHeirForm(parentId);
+      renderAll();
+    }
+
+    function resetHeirForm(keepParentId = "root") {
+      document.getElementById("heir-editing-id").value = "";
+      refreshParentDropdown(false);
+      document.getElementById("heir-parent-id").value = keepParentId;
+      document.getElementById("heir-name").value = "";
+      clearDateInputs("heir-birth");
+      clearDateInputs("heir-death");
+      document.getElementById("heir-note").value = "";
+      document.getElementById("heir-dots-after").checked = false;
+
+      document.getElementById("heir-form-heading").textContent = "＋ 逐一輸入繼承人（新增成員）";
+      document.getElementById("btn-submit-heir").textContent = "＋ 加入繼承系統表";
+      document.getElementById("btn-cancel-edit").classList.add("hidden");
+
+      autoSuggestTitle();
+    }
+
+    function editHeirById(id, event) {
+      if (event) event.stopPropagation();
+      const heir = appState.heirs.find((h) => h.id === id);
+      if (!heir) return;
+
+      selectedNodeId = id;
+      switchTab("heirs");
+
+      document.getElementById("heir-editing-id").value = heir.id;
+      refreshParentDropdown(false);
+      document.getElementById("heir-parent-id").value = heir.parentId || "root";
+      document.getElementById("heir-title").value = heir.title || "";
+      document.getElementById("heir-name").value = heir.name || "";
+      setDateInputs("heir-birth", heir.birth);
+      setDateInputs("heir-death", heir.death);
+      document.getElementById("heir-note").value = heir.note || "";
+      document.getElementById("heir-dots-after").checked = Boolean(heir.dotsAfter);
+
+      document.getElementById("heir-form-heading").textContent = `✎ 修改資料：${heir.title} ${heir.name}`;
+      document.getElementById("btn-submit-heir").textContent = "✓ 儲存修改";
+      document.getElementById("btn-cancel-edit").classList.remove("hidden");
+
+      renderAll();
+      document.getElementById("heir-form-card").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function startAddChildFor(parentId, event) {
+      if (event) event.stopPropagation();
+      const parent = appState.heirs.find((h) => h.id === parentId);
+      switchTab("heirs");
+      resetHeirForm(parentId);
+      if (parent) {
+        document.getElementById("heir-form-heading").textContent = `＋ 新增「${parent.title} ${parent.name}」之下一代子女`;
+      }
+      document.getElementById("heir-name").focus();
+      renderAll();
+    }
+
+    function selectDecedentForEdit(event) {
+      if (appState.config.directTextEdit) return;
+      if (event) event.stopPropagation();
+      selectedNodeId = "decedent";
+      switchTab("decedent");
+      renderChart();
+      document.getElementById("dec-name").focus();
+    }
+
+    function selectSpouseForEdit(spId, event) {
+      if (appState.config.directTextEdit) return;
+      if (event) event.stopPropagation();
+      selectedNodeId = spId;
+      switchTab("decedent");
+      renderSpouseEditorList();
+      renderChart();
+      const cardEl = document.getElementById(`spouse-editor-card-${spId}`);
+      if (cardEl) cardEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      const nameInput = document.getElementById(`spouse-name-input-${spId}`);
+      if (nameInput) nameInput.focus();
+    }
+
+    function moveHeir(id, direction, event) {
+      if (event) event.stopPropagation();
+      const target = appState.heirs.find((h) => h.id === id);
+      if (!target) return;
+      const siblings = appState.heirs.filter((h) => h.parentId === target.parentId);
+      const idxInSiblings = siblings.findIndex((s) => s.id === id);
+      const swapSibling = siblings[idxInSiblings + direction];
+      if (!swapSibling) return;
+
+      const idxA = appState.heirs.findIndex((h) => h.id === target.id);
+      const idxB = appState.heirs.findIndex((h) => h.id === swapSibling.id);
+      const temp = appState.heirs[idxA];
+      appState.heirs[idxA] = appState.heirs[idxB];
+      appState.heirs[idxB] = temp;
+
+      renderAll();
+    }
+
+    function deleteHeir(id, event) {
+      if (event) event.stopPropagation();
+      // 遞迴找出所有子孫一併移除
+      const toRemove = new Set([id]);
+      let added = true;
+      while (added) {
+        added = false;
+        for (const h of appState.heirs) {
+          if (toRemove.has(h.parentId) && !toRemove.has(h.id)) {
+            toRemove.add(h.id);
+            added = true;
+          }
+        }
+      }
+      appState.heirs = appState.heirs.filter((h) => !toRemove.has(h.id));
+      if (selectedNodeId && toRemove.has(selectedNodeId)) {
+        resetHeirForm();
+        selectedNodeId = null;
+      }
+      renderAll();
+    }
+
+    function renderHeirManageList() {
+      const listEl = document.getElementById("heir-tree-list");
+      document.getElementById("heir-count-badge").textContent = `共 ${appState.heirs.length} 人`;
+
+      if (appState.heirs.length === 0) {
+        listEl.innerHTML = `<div class="p-4 text-center border border-dashed border-[var(--border,#cbd5e1)] rounded text-[var(--muted-foreground,#475569)]">尚未加入繼承人，請從上方表單逐一輸入並點擊「＋ 加入繼承系統表」</div>`;
+        return;
+      }
+
+      let html = "";
+      function buildList(parentId, depth) {
+        const children = appState.heirs.filter((h) => h.parentId === parentId);
+        children.forEach((h, i) => {
+          const safeId = sanitizeId(h.id, "h");
+          h.id = safeId;
+          const isSelected = selectedNodeId === safeId;
+          const bStr = hasDate(h.birth) ? `生:${formatDateObj(h.birth)}` : "";
+          const dStr = hasDate(h.death) ? `歿:${formatDateObj(h.death)}` : "";
+          const metaStr = [bStr, dStr, h.note].filter(Boolean).join("｜");
+
+          html += `
+            <div onclick="editHeirById('${safeId}', event)"
+              style="margin-left: ${depth * 18}px"
+              class="p-2 rounded border ${isSelected ? 'border-[var(--primary,#2563eb)] bg-[var(--secondary,#e2e8f0)]' : 'border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)]'} flex items-center justify-between gap-2 cursor-pointer hover:opacity-95 transition">
+              <div class="min-w-0">
+                <div class="font-bold text-[var(--foreground,#0f172a)] truncate">
+                  ${depth > 0 ? '<span class="text-[var(--muted-foreground,#475569)] mr-1">↳</span>' : ''}
+                  <span>${escapeHtml(h.title)}</span>
+                  <span class="ml-1">${escapeHtml(h.name)}</span>
+                  ${h.dotsAfter ? '<span class="ml-1 px-1 py-0.2 text-[10px] rounded bg-[var(--background,#f8fafc)] border border-[var(--border,#cbd5e1)]">含⋮省略號</span>' : ''}
+                </div>
+                ${metaStr ? `<div class="text-[11px] text-[var(--muted-foreground,#475569)] truncate mt-0.5">${escapeHtml(metaStr)}</div>` : ''}
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <button type="button" onclick="startAddChildFor('${safeId}', event)"
+                  class="px-1.5 py-0.5 rounded bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] text-[11px] font-medium"
+                  title="在此人右側新增下一代子女（如代位繼承人）">
+                  +子代
+                </button>
+                <button type="button" onclick="moveHeir('${safeId}', -1, event)"
+                   ${i === 0 ? 'disabled class="opacity-30 px-1"' : 'class="px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] hover:bg-[var(--background,#f8fafc)]"'}
+                  title="上移">↑</button>
+                <button type="button" onclick="moveHeir('${safeId}', 1, event)"
+                  ${i === children.length - 1 ? 'disabled class="opacity-30 px-1"' : 'class="px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] hover:bg-[var(--background,#f8fafc)]"'}
+                  title="下移">↓</button>
+                <button type="button" onclick="deleteHeir('${safeId}', event)"
+                  class="px-1.5 py-0.5 rounded text-[var(--error,#dc2626)] hover:bg-red-50"
+                  title="刪除">✕</button>
+              </div>
+            </div>
+          `;
+          buildList(safeId, depth + 1);
+        });
+      }
+
+      buildList("root", 0);
+      listEl.innerHTML = html;
+    }
+
+    // =========================================================================
+    // 直接文字微調模式 (contenteditable) 即時同步回 appState（防止修改丟失與 HTML 注入）
+    // =========================================================================
+    function syncDirectEdit(role, id, field, el) {
+      if (!el) return;
+      const cleanText = (el.textContent || "").replace(/[\r\n]+/g, " ").trim();
+      if (role === "decedent") {
+        if (field === "title" || field === "name" || field === "note") {
+          appState.decedent[field] = cleanText;
+          if (field === "title") document.getElementById("dec-title").value = cleanText;
+          if (field === "name") document.getElementById("dec-name").value = cleanText;
+          if (field === "note") document.getElementById("dec-note").value = cleanText;
+        }
+      } else if (role === "spouse") {
+        const sp = appState.spouses.find((s) => s.id === id);
+        if (sp && (field === "title" || field === "name" || field === "note")) {
+          sp[field] = cleanText;
+          renderSpouseEditorList();
+        }
+      } else if (role === "heir") {
+        const h = appState.heirs.find((item) => item.id === id);
+        if (h && (field === "title" || field === "name" || field === "note")) {
+          h[field] = cleanText;
+          renderHeirManageList();
+        }
+      }
+      saveStateToStorage();
+      requestAnimationFrame(drawTraditionalConnectorLines);
+    }
+
+    // =========================================================================
+    // 核心：繪製繼承系統表 DOM 與 SVG 傳統直豎橫線（如附圖樣式）
+    // =========================================================================
+    function renderAll() {
+      refreshParentDropdown();
+      renderHeirManageList();
+      renderChart();
+    }
+
+    function renderChart() {
+      const sheet = document.getElementById("printable-area");
+      sheet.classList.remove("font-kai", "font-serif-tc", "font-sans-tc");
+      sheet.classList.add(appState.config.fontFamily || "font-kai");
+
+      const isDirect = Boolean(appState.config.directTextEdit);
+
+      // 1. 表頭大標題
+      const titleEl = document.getElementById("chart-header-title");
+      if (appState.config.chartTitle && appState.config.chartTitle.trim()) {
+        titleEl.textContent = appState.config.chartTitle.trim();
+        titleEl.classList.remove("hidden");
+      } else {
+        titleEl.classList.add("hidden");
+      }
+
+      // 2. 左欄：被繼承人
+      const decNode = document.getElementById("node-decedent");
+      decNode.classList.toggle("active-selected", selectedNodeId === "decedent");
+      document.getElementById("render-dec-title").innerHTML = `<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('decedent','','title',this)"` : ''}>${escapeHtml(appState.decedent.title || "被繼承人")}</span>`;
+      document.getElementById("render-dec-name").innerHTML = `<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('decedent','','name',this)"` : ''}>${escapeHtml(appState.decedent.name || "○○○")}</span>`;
+
+      // 被繼承人出生日期
+      const decBirthRow = document.getElementById("render-dec-birth-row");
+      const decBirthFormatted = formatDateObj(appState.decedent.birth);
+      if (decBirthFormatted) {
+        decBirthRow.innerHTML = `<span>出生日期：${escapeHtml(decBirthFormatted)}</span>`;
+        decBirthRow.classList.remove("hidden");
+      } else if (appState.config.showEmptyDates && appState.config.showBirthForAll) {
+        decBirthRow.innerHTML = `<span>出生日期：</span>`;
+        decBirthRow.classList.remove("hidden");
+      } else {
+        decBirthRow.classList.add("hidden");
+      }
+
+      // 被繼承人死亡日期（附圖中「死亡日期：────」為連接線起點）
+      const decDeathText = document.getElementById("render-dec-death-text");
+      const decDeathFormatted = formatDateObj(appState.decedent.death);
+      decDeathText.innerHTML = `<span>死亡日期：${escapeHtml(decDeathFormatted)}</span>`;
+
+      // 被繼承人備註
+      const decNoteRow = document.getElementById("render-dec-note-row");
+      if (appState.decedent.note && appState.decedent.note.trim()) {
+        decNoteRow.innerHTML = `<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('decedent','','note',this)"` : ''}>${escapeHtml(appState.decedent.note)}</span>`;
+        decNoteRow.classList.remove("hidden");
+      } else {
+        decNoteRow.classList.add("hidden");
+      }
+
+      // 3. 左欄：配偶（位於被繼承人下方）
+      const spousesContainer = document.getElementById("render-spouses-container");
+      spousesContainer.innerHTML = appState.spouses.map((sp) => {
+        const safeId = sanitizeId(sp.id, "sp");
+        sp.id = safeId;
+        const spBirth = formatDateObj(sp.birth);
+        const spDeath = formatDateObj(sp.death);
+        const isSel = selectedNodeId === safeId;
+        return `
+          <div onclick="selectSpouseForEdit('${safeId}', event)"
+            class="chart-person-box p-2.5 ${isSel ? 'active-selected' : ''}">
+            <div class="text-xl font-bold tracking-wide leading-snug" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','title',this)"` : ''}>
+              ${escapeHtml(sp.title || "配偶")}
+            </div>
+            <div class="text-xl font-bold tracking-wide mt-1" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','name',this)"` : ''}>
+              ${escapeHtml(sp.name || "○○○")}
+            </div>
+            ${spBirth ? `<div class="text-sm mt-1 text-gray-800">出生日期：${escapeHtml(spBirth)}</div>` : ''}
+            ${spDeath ? `<div class="text-sm mt-0.5 text-gray-800">死亡日期：${escapeHtml(spDeath)}</div>` : ''}
+            ${sp.note ? `<div class="text-xs mt-0.5 text-gray-600" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','note',this)"` : ''}>${escapeHtml(sp.note)}</div>` : ''}
+          </div>
+        `;
+      }).join("");
+
+      // 4. 右側：遞迴建立繼承人樹狀結構
+      const heirsRootEl = document.getElementById("chart-heirs-root");
+      heirsRootEl.innerHTML = buildHeirSubtreeHtml("root", isDirect);
+
+      // 5. 底部切結語
+      const footerEl = document.getElementById("chart-legal-footer");
+      if (appState.config.showLegalFooter && appState.config.legalText.trim()) {
+        footerEl.textContent = appState.config.legalText;
+        footerEl.classList.remove("hidden");
+      } else {
+        footerEl.classList.add("hidden");
+      }
+
+      // 6. 計算並繪製精準 SVG 傳統垂直幹線與水平分支線
+      requestAnimationFrame(() => {
+        drawTraditionalConnectorLines();
+      });
+    }
+
+    function buildHeirSubtreeHtml(parentId, isDirect) {
+      const children = appState.heirs.filter((h) => h.parentId === parentId);
+      if (children.length === 0) return "";
+
+      const itemsHtml = children.map((child) => {
+        const safeId = sanitizeId(child.id, "h");
+        child.id = safeId;
+        const subTreeHtml = buildHeirSubtreeHtml(safeId, isDirect);
+        const hasChildren = subTreeHtml !== "";
+        const bStr = appState.config.showBirthForAll ? formatDateObj(child.birth) : "";
+        const dStr = formatDateObj(child.death);
+        const isSel = selectedNodeId === safeId;
+
+        return `
+          <div class="heir-branch-row flex items-start" data-heir-id="${safeId}" data-parent-id="${escapeHtml(parentId)}">
+            <!-- 單一繼承人節點區塊 -->
+            <div class="flex flex-col items-start pr-14">
+              <div id="node-heir-${safeId}"
+                onclick="handleChartHeirClick('${safeId}', event)"
+                class="chart-person-box px-2.5 py-1.5 ${isSel ? 'active-selected' : ''}"
+                style="min-width: 145px;">
+
+                <!-- 浮動快速操作列（滑鼠移過或選取時顯示，列印時自動隱藏） -->
+                <div class="quick-action-bar no-print absolute -top-6 left-1 z-30 flex items-center gap-1 bg-slate-800 text-white text-[11px] px-1.5 py-0.5 rounded shadow">
+                  <button type="button" onclick="editHeirById('${safeId}', event)" class="hover:text-blue-300" title="修改此人資料">修改</button>
+                  <span>·</span>
+                  <button type="button" onclick="startAddChildFor('${safeId}', event)" class="hover:text-emerald-300" title="新增此人的下一代子女">+子代</button>
+                  <span>·</span>
+                  <button type="button" onclick="moveHeir('${safeId}', -1, event)" class="hover:text-amber-300" title="上移">↑</button>
+                  <button type="button" onclick="moveHeir('${safeId}', 1, event)" class="hover:text-amber-300" title="下移">↓</button>
+                  <span>·</span>
+                  <button type="button" onclick="deleteHeir('${safeId}', event)" class="hover:text-red-300" title="刪除">✕</button>
+                </div>
+
+                <!-- 稱謂 + 姓名 主列（左側與右側設有線條錨點） -->
+                <div class="flex items-center text-xl font-bold tracking-wide leading-snug whitespace-nowrap">
+                  <span id="anchor-left-${safeId}" class="inline-block w-0 h-0 mr-1"></span>
+                  <span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','title',this)"` : ''}>${escapeHtml(child.title)}</span>
+                  <span class="ml-2" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','name',this)"` : ''}>${escapeHtml(child.name)}</span>
+                  <span id="anchor-right-${safeId}" class="inline-block w-0 h-0 ml-2"></span>
+                </div>
+
+                <!-- 出生與死亡日期、備註 -->
+                ${bStr ? `<div class="text-xs mt-1 text-gray-800 whitespace-nowrap">出生：${escapeHtml(bStr)}</div>` : ''}
+                ${dStr ? `<div class="text-xs mt-0.5 text-gray-800 whitespace-nowrap">死亡：${escapeHtml(dStr)}</div>` : ''}
+                ${child.note ? `<div class="text-xs mt-0.5 text-gray-600 whitespace-nowrap" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','note',this)"` : ''}>${escapeHtml(child.note)}</div>` : ''}
+              </div>
+
+              <!-- 若勾選下方顯示「⋮」省略號（如手繪附圖中參子下方、長子之次子下方） -->
+              ${child.dotsAfter ? `
+                <div class="pl-8 py-2 text-xl font-bold leading-4 select-none text-gray-800 tracking-widest" title="省略號標記">
+                  ⋮
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- 遞迴子代欄位 -->
+            ${hasChildren ? `<div class="heir-children-col flex flex-col space-y-3" data-spine-for="${safeId}">${subTreeHtml}</div>` : ''}
+          </div>
+        `;
+      }).join("");
+
+      if (parentId === "root") {
+        return `<div class="heir-children-col flex flex-col space-y-4" data-spine-for="root">${itemsHtml}</div>`;
+      }
+      return itemsHtml;
+    }
+
+    function handleChartHeirClick(id, event) {
+      if (appState.config.directTextEdit) return;
+      editHeirById(id, event);
+    }
+
+    // =========================================================================
+    // 繪製與手繪附圖完全一致的傳統直豎括號線（│ 與 ─）
+    // =========================================================================
+    function drawTraditionalConnectorLines() {
+      const stage = document.getElementById("chart-stage");
+      const svg = document.getElementById("chart-lines-svg");
+      if (!stage || !svg) return;
+
+      // 暫時重設縮放以取得精準未縮放之相對座標，或以倍率修正
+      const stageRect = stage.getBoundingClientRect();
+      const scale = currentZoom || 1;
+
+      const relPos = (el) => {
+        const r = el.getBoundingClientRect();
+        return {
+          left: (r.left - stageRect.left) / scale,
+          right: (r.right - stageRect.left) / scale,
+          top: (r.top - stageRect.top) / scale,
+          bottom: (r.bottom - stageRect.top) / scale,
+          midY: (r.top + r.height / 2 - stageRect.top) / scale
+        };
+      };
+
+      const stageW = stage.scrollWidth;
+      const stageH = stage.scrollHeight;
+      svg.setAttribute("width", stageW);
+      svg.setAttribute("height", stageH);
+      svg.setAttribute("viewBox", `0 0 ${stageW} ${stageH}`);
+
+      const lines = [];
+      const strokeColor = "#1f2937";
+      const strokeWidth = 2;
+
+      // 找出所有世代的 children column (`data-spine-for`)
+      const spineCols = stage.querySelectorAll("[data-spine-for]");
+      spineCols.forEach((col) => {
+        const parentKey = col.getAttribute("data-spine-for");
+        const directRows = Array.from(col.children).filter((el) => el.classList.contains("heir-branch-row"));
+        if (directRows.length === 0) return;
+
+        // 蒐集此欄所有直接子節點的左側錨點
+        const childAnchors = [];
+        directRows.forEach((row) => {
+          const hId = row.getAttribute("data-heir-id");
+          const leftAnchor = document.getElementById(`anchor-left-${hId}`);
+          if (leftAnchor) {
+            childAnchors.push({ id: hId, pos: relPos(leftAnchor), rowPos: relPos(row) });
+          }
+        });
+
+        if (childAnchors.length === 0) return;
+
+        // 垂直幹線 X 座標：設在第一個子節點文字左側往左 16px 處
+        const spineX = childAnchors[0].pos.left - 16;
+
+        // 垂直幹線的起點與終點：如同手繪附圖，上下略微延伸出頭（約 14px），並涵蓋最末節點（含省略號）
+        let topY = childAnchors[0].pos.midY - 14;
+        const lastRow = directRows[directRows.length - 1];
+        const lastRowRect = relPos(lastRow);
+        const lastAnchorY = childAnchors[childAnchors.length - 1].pos.midY;
+        let bottomY = Math.max(lastAnchorY + 22, lastRowRect.bottom - 4);
+
+        // 若為第一代 (root)，先確認被繼承人「死亡日期：」高度，確保垂直幹線必定涵蓋該水平連線高度（解決僅 1 名子女時對齊偏移問題）
+        let rootConnectY = null;
+        let rootLeftX = null;
+        if (parentKey === "root") {
+          const decAnchor = document.getElementById("decedent-line-anchor");
+          if (decAnchor) {
+            const decPos = relPos(decAnchor);
+            rootConnectY = decPos.midY;
+            rootLeftX = decPos.left;
+            if (rootConnectY < topY + 6) topY = rootConnectY - 8;
+            if (rootConnectY > bottomY - 6) bottomY = rootConnectY + 8;
+          }
+        }
+
+        // 1. 畫垂直幹線 (│)
+        lines.push(`<line x1="${spineX}" y1="${topY}" x2="${spineX}" y2="${bottomY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+
+        // 2. 畫每個子節點的短橫線刻度 (├─)，稍微穿過垂直線 4px 呈現手繪附圖的「┼─」質感
+        childAnchors.forEach((ca) => {
+          const y = ca.pos.midY;
+          const xStart = spineX - 4;
+          const xEnd = ca.pos.left - 4;
+          lines.push(`<line x1="${xStart}" y1="${y}" x2="${xEnd}" y2="${y}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+        });
+
+        // 3. 畫從上層親屬連到這條垂直幹線的水平橫線 (────)
+        if (parentKey === "root") {
+          if (rootConnectY !== null && rootLeftX !== null) {
+            lines.push(`<line x1="${rootLeftX}" y1="${rootConnectY}" x2="${spineX}" y2="${rootConnectY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+          }
+        } else {
+          const parentRightAnchor = document.getElementById(`anchor-right-${parentKey}`);
+          if (parentRightAnchor) {
+            const pPos = relPos(parentRightAnchor);
+            const connectY = pPos.midY;
+            // 若母節點 Y 比子幹線頂端高或低，自動延伸垂直幹線以完美銜接
+            if (connectY < topY) {
+              lines.push(`<line x1="${spineX}" y1="${connectY - 8}" x2="${spineX}" y2="${topY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+            } else if (connectY > bottomY) {
+              lines.push(`<line x1="${spineX}" y1="${bottomY}" x2="${spineX}" y2="${connectY + 8}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+            }
+            lines.push(`<line x1="${pPos.right + 4}" y1="${connectY}" x2="${spineX}" y2="${connectY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+          }
+        }
+      });
+
+      svg.innerHTML = lines.join("");
+    }
+
+    // =========================================================================
+    // 縮放、匯出 JSON、匯出 Excel (.xlsx)、匯出 PNG 圖片與列印
+    // =========================================================================
+    function adjustZoom(delta) {
+      currentZoom = Math.min(1.6, Math.max(0.5, Math.round((currentZoom + delta) * 10) / 10));
+      applyZoom();
+    }
+
+    function resetZoom() {
+      currentZoom = 1;
+      applyZoom();
+    }
+
+    function applyZoom() {
+      const sheet = document.getElementById("printable-area");
+      sheet.style.transform = `scale(${currentZoom})`;
+      document.getElementById("zoom-readout").textContent = `${Math.round(currentZoom * 100)}%`;
+      requestAnimationFrame(drawTraditionalConnectorLines);
+    }
+
+    // 資安防護：消毒匯入的 JSON 結構，過濾非法屬性與不安全 ID
+    function sanitizeDateField(d) {
+      if (!d || typeof d !== "object") return { era: "民國", year: "", month: "", day: "" };
+      return {
+        era: ["民國", "民前", "西元"].includes(String(d.era)) ? String(d.era) : "民國",
+        year: String(d.year ?? "").slice(0, 10),
+        month: String(d.month ?? "").slice(0, 10),
+        day: String(d.day ?? "").slice(0, 10)
+      };
+    }
+
+    function sanitizeImportedState(raw) {
+      const safeSpouses = Array.isArray(raw.decedent?.spouses)
+        ? raw.decedent.spouses.map((sp, i) => ({
+            id: sanitizeId(sp?.id || `sp_${i + 1}`),
+            title: String(sp?.title ?? "配").slice(0, 30),
+            name: String(sp?.name ?? "").slice(0, 60),
+            birth: sanitizeDateField(sp?.birth),
+            death: sanitizeDateField(sp?.death),
+            note: String(sp?.note ?? "").slice(0, 120)
+          }))
+        : [];
+
+      const idMap = new Map();
+      idMap.set("root", "root");
+      const rawHeirs = Array.isArray(raw.heirs) ? raw.heirs : [];
+      rawHeirs.forEach((h, i) => {
+        const oldId = String(h?.id ?? `h_${i + 1}`);
+        idMap.set(oldId, sanitizeId(oldId));
+      });
+
+      const safeHeirs = rawHeirs.map((h, i) => {
+        const oldId = String(h?.id ?? `h_${i + 1}`);
+        const rawParent = String(h?.parentId ?? "root");
+        return {
+          id: idMap.get(oldId) || sanitizeId(`h_${i + 1}`),
+          parentId: idMap.get(rawParent) || "root",
+          order: Number.isFinite(Number(h?.order)) ? Number(h.order) : i + 1,
+          title: String(h?.title ?? "").slice(0, 40),
+          name: String(h?.name ?? "").slice(0, 60),
+          birth: sanitizeDateField(h?.birth),
+          death: sanitizeDateField(h?.death),
+          note: String(h?.note ?? "").slice(0, 120),
+          dotsAfter: Boolean(h?.dotsAfter)
+        };
+      });
+
+      return {
+        config: {
+          title: String(raw.config?.title ?? "繼承系統表").slice(0, 100),
+          fontClass: ["font-kai", "font-serif-tc", "font-sans-tc"].includes(raw.config?.fontClass)
+            ? raw.config.fontClass
+            : "font-kai",
+          showBirthForAll: Boolean(raw.config?.showBirthForAll),
+          directTextEdit: Boolean(raw.config?.directTextEdit),
+          footerNote: String(raw.config?.footerNote ?? "").slice(0, 1000)
+        },
+        decedent: {
+          name: String(raw.decedent?.name ?? "").slice(0, 60),
+          birth: sanitizeDateField(raw.decedent?.birth),
+          death: sanitizeDateField(raw.decedent?.death),
+          spouses: safeSpouses
+        },
+        heirs: safeHeirs
+      };
+    }
+
+    function exportProjectJSON() {
+      const dataStr = JSON.stringify(appState, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const decName = (appState.decedent.name || "未命名").replace(/[\\/:*?"<>|]/g, "");
+      a.href = url;
+      a.download = `繼承系統表_${decName}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importProjectJSON(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && parsed.decedent && Array.isArray(parsed.heirs)) {
+            appState = sanitizeImportedState(parsed);
+            selectedNodeId = null;
+            syncAllFormsFromState();
+            renderAll();
+          } else {
+            alert("檔案格式不正確，請選擇由本系統儲存的 .json 專案檔。");
+          }
+        } catch (err) {
+          alert("讀取檔案失敗：" + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+
+    // =========================================================================
+    // 100% 本機原生產生標準 Excel (.xlsx) 檔案（無須任何外部套件或網路連線）
+    // 內含 2 個工作表：
+    //   工作表 1「繼承系統表」：視覺化樹狀排版（含標題、被繼承人、配偶、各代分支線與頁尾聲明）
+    //   工作表 2「繼承人明細清單」：結構化清單表格，方便篩選、排序與計算應繼分
+    // =========================================================================
+    function crc32Bytes(uint8) {
+      let c = 0xffffffff;
+      for (let i = 0; i < uint8.length; i++) {
+        c ^= uint8[i];
+        for (let k = 0; k < 8; k++) {
+          c = (c >>> 1) ^ (c & 1 ? 0xedb88320 : 0);
+        }
+      }
+      return (c ^ 0xffffffff) >>> 0;
+    }
+
+    function createZipBlob(filesMap) {
+      const encoder = new TextEncoder();
+      const entries = Object.entries(filesMap).map(([name, content]) => {
+        const nameBytes = encoder.encode(name);
+        const dataBytes = typeof content === "string" ? encoder.encode(content) : content;
+        const crc = crc32Bytes(dataBytes);
+        return { nameBytes, dataBytes, crc };
+      });
+
+      let localOffset = 0;
+      const localParts = [];
+      const centralParts = [];
+
+      entries.forEach((entry) => {
+        const { nameBytes, dataBytes, crc } = entry;
+        const localHeader = new Uint8Array(30 + nameBytes.length);
+        const lv = new DataView(localHeader.buffer);
+        lv.setUint32(0, 0x04034b50, true);
+        lv.setUint16(4, 20, true);
+        lv.setUint16(6, 0x0800, true); // UTF-8 filename flag
+        lv.setUint16(8, 0, true); // store (no compression)
+        lv.setUint16(10, 0, true);
+        lv.setUint16(12, 0x4821, true);
+        lv.setUint32(14, crc, true);
+        lv.setUint32(18, dataBytes.length, true);
+        lv.setUint32(22, dataBytes.length, true);
+        lv.setUint16(26, nameBytes.length, true);
+        lv.setUint16(28, 0, true);
+        localHeader.set(nameBytes, 30);
+
+        localParts.push(localHeader, dataBytes);
+
+        const centralHeader = new Uint8Array(46 + nameBytes.length);
+        const cv = new DataView(centralHeader.buffer);
+        cv.setUint32(0, 0x02014b50, true);
+        cv.setUint16(4, 20, true);
+        cv.setUint16(6, 20, true);
+        cv.setUint16(8, 0x0800, true); // UTF-8
+        cv.setUint16(10, 0, true);
+        cv.setUint16(12, 0, true);
+        cv.setUint16(14, 0x4821, true);
+        cv.setUint32(16, crc, true);
+        cv.setUint32(20, dataBytes.length, true);
+        cv.setUint32(24, dataBytes.length, true);
+        cv.setUint16(28, nameBytes.length, true);
+        cv.setUint16(30, 0, true);
+        cv.setUint16(32, 0, true);
+        cv.setUint16(34, 0, true);
+        cv.setUint16(36, 0, true);
+        cv.setUint32(38, 0, true);
+        cv.setUint32(42, localOffset, true);
+        centralHeader.set(nameBytes, 46);
+
+        centralParts.push(centralHeader);
+        localOffset += localHeader.length + dataBytes.length;
+      });
+
+      const centralSize = centralParts.reduce((acc, arr) => acc + arr.length, 0);
+      const eocd = new Uint8Array(22);
+      const ev = new DataView(eocd.buffer);
+      ev.setUint32(0, 0x06054b50, true);
+      ev.setUint16(4, 0, true);
+      ev.setUint16(6, 0, true);
+      ev.setUint16(8, entries.length, true);
+      ev.setUint16(10, entries.length, true);
+      ev.setUint32(12, centralSize, true);
+      ev.setUint32(16, localOffset, true);
+      ev.setUint16(20, 0, true);
+
+      return new Blob([...localParts, ...centralParts, eocd], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      });
+    }
+
+    function excelColName(colIdx1Based) {
+      let n = colIdx1Based;
+      let s = "";
+      while (n > 0) {
+        const m = (n - 1) % 26;
+        s = String.fromCharCode(65 + m) + s;
+        n = Math.floor((n - 1) / 26);
+      }
+      return s;
+    }
+
+    function escapeXml(str) {
+      return String(str ?? "")
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+    }
+
+    function buildWorksheetXml(gridRows, colWidths, merges = []) {
+      const colsXml = colWidths
+        .map((w, idx) => `<col min="${idx + 1}" max="${idx + 1}" width="${w}" customWidth="1"/>`)
+        .join("");
+
+      const rowsXml = gridRows
+        .map((rowObj, rIdx) => {
+          const rNum = rIdx + 1;
+          const htAttr = rowObj.height ? ` ht="${rowObj.height}" customHeight="1"` : "";
+          const cellsXml = (rowObj.cells || [])
+            .map((cell, cIdx) => {
+              if (!cell || (cell.v === undefined || cell.v === null || cell.v === "") && !cell.s) {
+                return "";
+              }
+              const ref = `${excelColName(cIdx + 1)}${rNum}`;
+              const styleAttr = cell.s ? ` s="${cell.s}"` : "";
+              const valStr = escapeXml(cell.v ?? "");
+              return `<c r="${ref}" t="inlineStr"${styleAttr}><is><t xml:space="preserve">${valStr}</t></is></c>`;
+            })
+            .join("");
+          return `<row r="${rNum}"${htAttr}>${cellsXml}</row>`;
+        })
+        .join("");
+
+      const mergeXml =
+        merges.length > 0
+          ? `<mergeCells count="${merges.length}">${merges.map((m) => `<mergeCell ref="${m}"/>`).join("")}</mergeCells>`
+          : "";
+
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetViews><sheetView workbookViewId="0" showGridLines="1"/></sheetViews>
+  <cols>${colsXml}</cols>
+  <sheetData>${rowsXml}</sheetData>
+  ${mergeXml}
+  <pageSetup paperSize="9" orientation="landscape"/>
+</worksheet>`;
+    }
+
+    function formatPersonBlockText(title, name, birthObj, deathObj, note, includeBirth) {
+      const lines = [];
+      const head = `${title ? title + " " : ""}${name || ""}`.trim();
+      if (head) lines.push(head);
+      if (includeBirth) {
+        const bStr = formatDateObj(birthObj);
+        if (bStr) lines.push(`出生：${bStr}`);
+      }
+      const dStr = formatDateObj(deathObj);
+      if (dStr) lines.push(`死亡：${dStr}`);
+      if (note) lines.push(note);
+      return lines.join("\n");
+    }
+
+    function exportAsExcel() {
+      const dec = appState.decedent;
+      const showBirth = appState.config.showBirthForAll;
+
+      // =====================================================
+      // 建立工作表 1：繼承系統表（視覺化樹狀排版）
+      // =====================================================
+      // 計算樹狀結構每一列與世代深度
+      let maxGenDepth = 1;
+      function getMaxGen(parentId, depth) {
+        const ch = getChildrenOf(parentId);
+        if (ch.length > 0) {
+          maxGenDepth = Math.max(maxGenDepth, depth);
+          ch.forEach((c) => getMaxGen(c.id, depth + 1));
+        }
+      }
+      getMaxGen("root", 1);
+
+      // 將樹狀結構展開為 2D 座標列 (每一個葉節點分支佔一列或依子樹高度展開)
+      const treeRows = [];
+      function layoutSubtree(parentId, genIndex, startRow) {
+        const children = getChildrenOf(parentId);
+        if (children.length === 0) return startRow;
+
+        let cursorRow = startRow;
+        const childRowPositions = [];
+
+        children.forEach((child) => {
+          const thisRow = cursorRow;
+          childRowPositions.push(thisRow);
+          while (treeRows.length <= thisRow) treeRows.push({});
+
+          const text = formatPersonBlockText(
+            child.title,
+            child.name,
+            child.birth,
+            child.death,
+            child.note,
+            showBirth
+          );
+          treeRows[thisRow][`node_${genIndex}`] = {
+            text,
+            lineCount: text.split("\n").length
+          };
+
+          const subChildren = getChildrenOf(child.id);
+          if (subChildren.length > 0) {
+            treeRows[thisRow][`conn_${genIndex}`] = "───";
+            const nextRowAfterSub = layoutSubtree(child.id, genIndex + 1, cursorRow);
+            cursorRow = Math.max(cursorRow + 1, nextRowAfterSub);
+          } else {
+            cursorRow += 1;
+          }
+
+          if (child.dotsAfter) {
+            while (treeRows.length <= cursorRow) treeRows.push({});
+            treeRows[cursorRow][`node_${genIndex}`] = {
+              text: "⋮",
+              lineCount: 1,
+              isDots: true
+            };
+            cursorRow += 1;
+          }
+        });
+
+        // 繪製此世代左側的直豎括號符號（┌─、├─、│、└─、──）
+        if (childRowPositions.length === 1) {
+          const r = childRowPositions[0];
+          treeRows[r][`spine_${genIndex}`] = "───";
+        } else if (childRowPositions.length > 1) {
+          const firstR = childRowPositions[0];
+          const lastR = childRowPositions[childRowPositions.length - 1];
+          for (let r = firstR; r <= lastR; r++) {
+            const isChild = childRowPositions.includes(r);
+            if (r === firstR) {
+              treeRows[r][`spine_${genIndex}`] = "┌──";
+            } else if (r === lastR) {
+              treeRows[r][`spine_${genIndex}`] = "└──";
+            } else if (isChild) {
+              treeRows[r][`spine_${genIndex}`] = "├──";
+            } else {
+              treeRows[r][`spine_${genIndex}`] = "│  ";
+            }
+          }
+        }
+
+        return cursorRow;
+      }
+
+      layoutSubtree("root", 1, 0);
+
+      // 準備工作表 1 的欄位與列資料
+      // Col 1 (A): 被繼承人與配偶欄
+      // 每一代佔 2 欄：Col (2*g): 連接線欄 (┌──/├──/└──), Col (2*g+1): 繼承人節點欄
+      const totalColsSheet1 = Math.max(5, 1 + maxGenDepth * 2);
+      const colWidthsSheet1 = [30];
+      for (let g = 1; g <= maxGenDepth; g++) {
+        colWidthsSheet1.push(7, 26);
+      }
+      while (colWidthsSheet1.length < totalColsSheet1) colWidthsSheet1.push(18);
+
+      const sheet1Rows = [];
+      const sheet1Merges = [];
+
+      // 第 1 列：表頭大標題
+      const titleText = appState.config.title || `${dec.name || ""} 繼承系統表`;
+      sheet1Rows.push({
+        height: 36,
+        cells: [{ v: titleText, s: 1 }]
+      });
+      sheet1Merges.push(`A1:${excelColName(totalColsSheet1)}1`);
+
+      // 第 2 列：本機離線產製安全標記
+      sheet1Rows.push({
+        height: 20,
+        cells: [{ v: "【本檔案由「繼承系統表產生器」於本機電腦離線產生，全程未上傳至網際網路】", s: 6 }]
+      });
+      sheet1Merges.push(`A2:${excelColName(totalColsSheet1)}2`);
+
+      // 第 3 列：空白間隔列
+      sheet1Rows.push({ height: 12, cells: [] });
+
+      // 第 4 列：欄位世代標示列
+      const genHeaderCells = [{ v: "【被繼承人與配偶】", s: 2 }];
+      for (let g = 1; g <= maxGenDepth; g++) {
+        genHeaderCells.push({ v: "", s: 2 });
+        genHeaderCells.push({ v: `【第 ${g} 代直系／繼承人】`, s: 2 });
+      }
+      sheet1Rows.push({ height: 26, cells: genHeaderCells });
+
+      // 準備左側被繼承人與配偶區塊列
+      const decLeftItems = [];
+      const decLines = [`被繼承人：${dec.name || ""}`];
+      const decBirthStr = formatDateObj(dec.birth);
+      const decDeathStr = formatDateObj(dec.death);
+      if (decBirthStr) decLines.push(`出生日期：${decBirthStr}`);
+      decLines.push(`死亡日期：${decDeathStr || "（未填）"}`);
+      decLeftItems.push({
+        text: decLines.join("\n"),
+        lineCount: decLines.length
+      });
+
+      (dec.spouses || []).forEach((sp) => {
+        const spText = formatPersonBlockText(sp.title, sp.name, sp.birth, sp.death, sp.note, showBirth);
+        decLeftItems.push({
+          text: spText,
+          lineCount: spText.split("\n").length
+        });
+      });
+
+      const bodyRowCount = Math.max(treeRows.length, decLeftItems.length, 1);
+      for (let r = 0; r < bodyRowCount; r++) {
+        const rowCells = new Array(totalColsSheet1).fill(null).map(() => ({ v: "" }));
+        let maxLinesInRow = 1;
+
+        if (r < decLeftItems.length) {
+          rowCells[0] = { v: decLeftItems[r].text, s: r === 0 ? 3 : 4 };
+          maxLinesInRow = Math.max(maxLinesInRow, decLeftItems[r].lineCount);
+        }
+
+        const tRow = treeRows[r] || {};
+        for (let g = 1; g <= maxGenDepth; g++) {
+          const spineColIdx = (g - 1) * 2 + 1;
+          const nodeColIdx = (g - 1) * 2 + 2;
+
+          let spineStr = tRow[`spine_${g}`] || "";
+          if (g > 1 && tRow[`conn_${g - 1}`] && !spineStr) {
+            spineStr = "───";
+          }
+          if (spineStr) {
+            rowCells[spineColIdx] = { v: spineStr, s: 5 };
+          }
+
+          const nodeInfo = tRow[`node_${g}`];
+          if (nodeInfo) {
+            rowCells[nodeColIdx] = {
+              v: nodeInfo.text,
+              s: nodeInfo.isDots ? 5 : 4
+            };
+            maxLinesInRow = Math.max(maxLinesInRow, nodeInfo.lineCount);
+          }
+        }
+
+        sheet1Rows.push({
+          height: Math.max(26, maxLinesInRow * 18 + 8),
+          cells: rowCells
+        });
+      }
+
+      // 空一列後加入頁尾切結文字
+      sheet1Rows.push({ height: 14, cells: [] });
+      if (appState.config.footerNote) {
+        const footerLines = appState.config.footerNote.split("\n").length;
+        const footerRowIdx = sheet1Rows.length + 1;
+        sheet1Rows.push({
+          height: Math.max(28, footerLines * 18 + 8),
+          cells: [{ v: appState.config.footerNote, s: 6 }]
+        });
+        sheet1Merges.push(`A${footerRowIdx}:${excelColName(totalColsSheet1)}${footerRowIdx}`);
+      }
+
+      // =====================================================
+      // 建立工作表 2：繼承人明細清單（結構化表格）
+      // =====================================================
+      const colWidthsSheet2 = [10, 16, 18, 16, 18, 24, 24, 26];
+      const sheet2Rows = [];
+      const sheet2Merges = [];
+
+      sheet2Rows.push({
+        height: 32,
+        cells: [{ v: `${dec.name || ""} 繼承系統表 — 親屬與繼承人明細清單`, s: 1 }]
+      });
+      sheet2Merges.push("A1:H1");
+
+      sheet2Rows.push({
+        height: 26,
+        cells: [
+          { v: "序號", s: 2 },
+          { v: "身分別／世代", s: 2 },
+          { v: "稱謂", s: 2 },
+          { v: "姓名", s: 2 },
+          { v: "上層親屬（父母）", s: 2 },
+          { v: "出生日期", s: 2 },
+          { v: "死亡日期", s: 2 },
+          { v: "狀態／備註", s: 2 }
+        ]
+      });
+
+      let seq = 1;
+      // 1. 被繼承人本人
+      sheet2Rows.push({
+        height: 24,
+        cells: [
+          { v: String(seq++), s: 5 },
+          { v: "被繼承人", s: 7 },
+          { v: "被繼承人", s: 7 },
+          { v: dec.name || "", s: 7 },
+          { v: "—", s: 5 },
+          { v: formatDateObj(dec.birth) || "—", s: 7 },
+          { v: formatDateObj(dec.death) || "—", s: 7 },
+          { v: "被繼承人本人", s: 7 }
+        ]
+      });
+
+      // 2. 配偶
+      (dec.spouses || []).forEach((sp) => {
+        sheet2Rows.push({
+          height: 24,
+          cells: [
+            { v: String(seq++), s: 5 },
+            { v: "被繼承人配偶", s: 7 },
+            { v: sp.title || "配", s: 7 },
+            { v: sp.name || "", s: 7 },
+            { v: `被繼承人 ${dec.name || ""} 之配偶`, s: 7 },
+            { v: formatDateObj(sp.birth) || "—", s: 7 },
+            { v: formatDateObj(sp.death) || "—", s: 7 },
+            { v: sp.note || "", s: 7 }
+          ]
+        });
+      });
+
+      // 3. 遞迴列出各代繼承人
+      function appendHeirRows(parentId, depth, parentLabel) {
+        const ch = getChildrenOf(parentId);
+        ch.forEach((h) => {
+          sheet2Rows.push({
+            height: 24,
+            cells: [
+              { v: String(seq++), s: 5 },
+              { v: `第 ${depth} 代直系血親`, s: 7 },
+              { v: h.title || "", s: 7 },
+              { v: h.name || "", s: 7 },
+              { v: parentLabel, s: 7 },
+              { v: formatDateObj(h.birth) || "—", s: 7 },
+              { v: formatDateObj(h.death) || "—", s: 7 },
+              { v: h.note || (h.dotsAfter ? "（下方含省略號 ⋮）" : ""), s: 7 }
+            ]
+          });
+          appendHeirRows(h.id, depth + 1, `${h.title || ""}${h.name ? " " + h.name : ""}`.trim());
+        });
+      }
+      appendHeirRows("root", 1, `被繼承人 ${dec.name || ""}`);
+
+      // =====================================================
+      // 封裝 OpenXML (.xlsx) 檔案結構並觸發下載
+      // =====================================================
+      const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="6">
+    <font><sz val="11"/><color rgb="FF111827"/><name val="標楷體"/></font>
+    <font><b/><sz val="18"/><color rgb="FF111827"/><name val="標楷體"/></font>
+    <font><b/><sz val="11"/><color rgb="FF1E293B"/><name val="標楷體"/></font>
+    <font><b/><sz val="12"/><color rgb="FF0F172A"/><name val="標楷體"/></font>
+    <font><b/><sz val="14"/><color rgb="FF334155"/><name val="標楷體"/></font>
+    <font><sz val="10"/><color rgb="FF475569"/><name val="標楷體"/></font>
+  </fonts>
+  <fills count="5">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFE2E8F0"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF8FAFC"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFEFCE8"/></patternFill></fill>
+  </fills>
+  <borders count="3">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border>
+      <left style="thin"><color rgb="FF94A3B8"/></left>
+      <right style="thin"><color rgb="FF94A3B8"/></right>
+      <top style="thin"><color rgb="FF94A3B8"/></top>
+      <bottom style="thin"><color rgb="FF94A3B8"/></bottom>
+      <diagonal/>
+    </border>
+    <border>
+      <left style="medium"><color rgb="FF1E293B"/></left>
+      <right style="medium"><color rgb="FF1E293B"/></right>
+      <top style="medium"><color rgb="FF1E293B"/></top>
+      <bottom style="medium"><color rgb="FF1E293B"/></bottom>
+      <diagonal/>
+    </border>
+  </borders>
+  <cellStyleXfs count="1">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  </cellStyleXfs>
+  <cellXfs count="8">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1">
+      <alignment horizontal="center" vertical="center"/>
+    </xf>
+    <xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">
+      <alignment horizontal="center" vertical="center" wrapText="1"/>
+    </xf>
+    <xf numFmtId="0" fontId="3" fillId="4" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">
+      <alignment horizontal="left" vertical="center" wrapText="1"/>
+    </xf>
+    <xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">
+      <alignment horizontal="left" vertical="center" wrapText="1"/>
+    </xf>
+    <xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1">
+      <alignment horizontal="center" vertical="center"/>
+    </xf>
+    <xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1">
+      <alignment horizontal="left" vertical="center" wrapText="1"/>
+    </xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1">
+      <alignment horizontal="left" vertical="center" wrapText="1"/>
+    </xf>
+  </cellXfs>
+</styleSheet>`;
+
+      const filesMap = {
+        "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`,
+        "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`,
+        "xl/workbook.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+    <sheet name="繼承系統表" sheetId="1" r:id="rId1"/>
+    <sheet name="繼承人明細清單" sheetId="2" r:id="rId2"/>
+  </sheets>
+</workbook>`,
+        "xl/_rels/workbook.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`,
+        "xl/styles.xml": stylesXml,
+        "xl/worksheets/sheet1.xml": buildWorksheetXml(sheet1Rows, colWidthsSheet1, sheet1Merges),
+        "xl/worksheets/sheet2.xml": buildWorksheetXml(sheet2Rows, colWidthsSheet2, sheet2Merges)
+      };
+
+      const zipBlob = createZipBlob(filesMap);
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      const decName = (dec.name || "未命名").replace(/[\\/:*?"<>|]/g, "");
+      a.href = url;
+      a.download = `繼承系統表_${decName}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function printChart() {
+      const prevZoom = currentZoom;
+      currentZoom = 1;
+      applyZoom();
+      setTimeout(() => {
+        window.print();
+        currentZoom = prevZoom;
+        applyZoom();
+      }, 120);
+    }
+
+    // 將系統表直接繪製並匯出為高解析度白底 PNG 圖片
+    async function exportAsPNG() {
+      const sheet = document.getElementById("printable-area");
+      const prevSelected = selectedNodeId;
+      selectedNodeId = null;
+      const prevZoom = currentZoom;
+      currentZoom = 1;
+      applyZoom();
+      renderChart();
+
+      await new Promise((r) => setTimeout(r, 80));
+
+      const width = sheet.scrollWidth;
+      const height = sheet.scrollHeight;
+      const scale = 2;
+
+      // 複製節點並移除 .no-print 元素以轉成 SVG ForeignObject
+      const clone = sheet.cloneNode(true);
+      clone.querySelectorAll(".no-print, .quick-action-bar").forEach((el) => el.remove());
+      clone.style.transform = "none";
+      clone.style.boxShadow = "none";
+      clone.style.margin = "0";
+      clone.style.backgroundColor = "#ffffff";
+      clone.style.color = "#111827";
+
+      const inlineStyle = `
+        * { box-sizing: border-box; }
+        .font-kai { font-family: "DFKai-SB", "BiauKai", "標楷體", "Kaiti TC", "STKaiti", serif; }
+        .font-serif-tc { font-family: "PMingLiU", "新細明體", serif; }
+        .font-sans-tc { font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; }
+        .flex { display: flex; }
+        .inline-flex { display: inline-flex; }
+        .flex-col { flex-direction: column; }
+        .items-start { align-items: flex-start; }
+        .items-center { align-items: center; }
+        .items-baseline { align-items: baseline; }
+        .justify-start { justify-content: flex-start; }
+        .relative { position: relative; }
+        .absolute { position: absolute; }
+        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .text-2xl { font-size: 24px; line-height: 32px; }
+        .text-xl { font-size: 20px; line-height: 28px; }
+        .text-base { font-size: 16px; line-height: 24px; }
+        .text-sm { font-size: 14px; line-height: 20px; }
+        .text-xs { font-size: 12px; line-height: 16px; }
+        .font-bold { font-weight: 700; }
+        .font-medium { font-weight: 500; }
+        .tracking-wide { letter-spacing: 0.025em; }
+        .tracking-widest { letter-spacing: 0.1em; }
+        .whitespace-nowrap { white-space: nowrap; }
+        .whitespace-pre-line { white-space: pre-line; }
+        .p-8, .md\\:p-12 { padding: 40px; }
+        .p-2\\.5 { padding: 10px; }
+        .px-2\\.5 { padding-left: 10px; padding-right: 10px; }
+        .py-1\\.5 { padding-top: 6px; padding-bottom: 6px; }
+        .py-2 { padding-top: 8px; padding-bottom: 8px; }
+        .pr-16 { padding-right: 64px; }
+        .pr-14 { padding-right: 56px; }
+        .pl-4 { padding-left: 16px; }
+        .pl-8 { padding-left: 32px; }
+        .mb-8 { margin-bottom: 32px; }
+        .mt-12 { margin-top: 48px; }
+        .mt-2 { margin-top: 8px; }
+        .mt-1\\.5 { margin-top: 6px; }
+        .mt-1 { margin-top: 4px; }
+        .mt-0\\.5 { margin-top: 2px; }
+        .ml-2 { margin-left: 8px; }
+        .mr-1 { margin-right: 4px; }
+        .pt-4 { padding-top: 16px; }
+        .border-t { border-top: 1px solid #9ca3af; }
+        .space-y-4 > * + * { margin-top: 16px; }
+        .space-y-5 > * + * { margin-top: 20px; }
+        .space-y-3 > * + * { margin-top: 12px; }
+        .gap-2 { gap: 8px; }
+      `;
+
+      const serialized = new XMLSerializer().serializeToString(clone);
+      const svgData = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">
+          <style>${inlineStyle}</style>
+          <rect width="100%" height="100%" fill="#ffffff" />
+          <foreignObject width="100%" height="100%">
+            ${serialized}
+          </foreignObject>
+        </svg>
+      `;
+
+      const img = new Image();
+      const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const dlUrl = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          const decName = (appState.decedent.name || "系統表").replace(/[\\/:*?"<>|]/g, "");
+          a.href = dlUrl;
+          a.download = `繼承系統表_${decName}.png`;
+          a.click();
+          URL.revokeObjectURL(dlUrl);
+        }, "image/png");
+
+        selectedNodeId = prevSelected;
+        currentZoom = prevZoom;
+        applyZoom();
+        renderChart();
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        selectedNodeId = prevSelected;
+        currentZoom = prevZoom;
+        applyZoom();
+        renderChart();
+        alert("若瀏覽器限制匯出圖片，請點擊右上角「列印 / 另存 PDF」輸出高畫質檔案。");
+      };
+
+      img.src = url;
+    }
+
+    // 資安強化：完整跳脫 HTML 特殊字元（含單引號 ' 與雙引號 "）以防範 DOM XSS 與屬性注入
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    const STORAGE_KEY = "inheritance_chart_saved_state_v1";
+    const STORAGE_PREF_KEY = "inheritance_chart_persist_enabled_v1";
+    let localStoragePersistEnabled = true;
+
+    function saveStateToStorage() {
+      if (!localStoragePersistEnabled) return;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        // ignore storage quota errors
+      }
+    }
+
+    function toggleLocalStoragePersist(enabled) {
+      localStoragePersistEnabled = Boolean(enabled);
+      try {
+        localStorage.setItem(STORAGE_PREF_KEY, localStoragePersistEnabled ? "1" : "0");
+        if (!localStoragePersistEnabled) {
+          localStorage.removeItem(STORAGE_KEY);
+        } else {
+          saveStateToStorage();
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    function clearLocalBrowserData() {
+      if (!confirm("確定要清除本機瀏覽器暫存的系統表資料嗎？\n（清除後將清空畫面，共用電腦使用完畢建議執行此操作）")) return;
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (e) {
+        // ignore
+      }
+      appState = {
+        config: {
+          title: "繼承系統表",
+          fontClass: "font-kai",
+          showBirthForAll: false,
+          directTextEdit: false,
+          footerNote: "本系統表係依民法相關規定編製，如有遺漏或錯誤，由申請人負法律責任。"
+        },
+        decedent: {
+          name: "",
+          birth: { era: "民國", year: "", month: "", day: "" },
+          death: { era: "民國", year: "", month: "", day: "" },
+          spouses: []
+        },
+        heirs: []
+      };
+      selectedNodeId = null;
+      syncAllFormsFromState();
+      renderAll();
+      alert("已徹底清除本機瀏覽器暫存資料！");
+    }
+
+    // 視窗大小改變時重繪連接線
+    window.addEventListener("resize", () => {
+      requestAnimationFrame(drawTraditionalConnectorLines);
+    });
+
+    // 攔截 renderChart 自動保存最新狀態至瀏覽器
+    const _origRenderChart = renderChart;
+    renderChart = function () {
+      _origRenderChart();
+      saveStateToStorage();
+    };
+
+    const THEME_PREF_KEY = "inheritance_chart_theme_v1";
+
+    function applyTheme(mode) {
+      const isDark = mode === "dark";
+      document.documentElement.classList.toggle("dark", isDark);
+      const btn = document.getElementById("btn-toggle-theme");
+      if (btn) {
+        btn.textContent = isDark ? "☀️ 淺色模式" : "🌙 深色模式";
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = !document.documentElement.classList.contains("dark");
+      const mode = isDark ? "dark" : "light";
+      applyTheme(mode);
+      try {
+        localStorage.setItem(THEME_PREF_KEY, mode);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // 初始化：優先載入主題偏好與瀏覽器上次儲存的資料，若無則載入與附圖完全一致的結構範本
+    window.addEventListener("DOMContentLoaded", () => {
+      try {
+        const savedTheme = localStorage.getItem(THEME_PREF_KEY);
+        if (savedTheme === "dark" || savedTheme === "light") {
+          applyTheme(savedTheme);
+        } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+          applyTheme("dark");
+        } else {
+          applyTheme("light");
+        }
+      } catch (e) {
+        applyTheme("light");
+      }
+
+      try {
+        const pref = localStorage.getItem(STORAGE_PREF_KEY);
+        if (pref === "0") {
+          localStoragePersistEnabled = false;
+          const toggleEl = document.getElementById("chk-local-persist");
+          if (toggleEl) toggleEl.checked = false;
+        }
+        if (localStoragePersistEnabled) {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.decedent && Array.isArray(parsed.heirs)) {
+              appState = sanitizeImportedState(parsed);
+              syncAllFormsFromState();
+              renderAll();
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        // fallback to sketch template
+      }
+      loadSketchTemplate();
+    });
+  </script>
+</body>
+</html>
