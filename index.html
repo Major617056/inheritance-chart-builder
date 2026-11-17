@@ -649,11 +649,21 @@
             <div class="space-y-1 text-xs">
               <div class="flex items-center justify-between">
                 <label class="text-[var(--muted-foreground,#475569)] font-medium">出生年月日</label>
-                <span class="text-[var(--muted-foreground,#475569)] text-[11px]">支援民國年或右側日曆選取</span>
+                <span class="text-[var(--muted-foreground,#475569)] text-[11px]">支援民國、昭和／大正／明治換算或日曆</span>
               </div>
-              <div class="flex items-center gap-1.5">
-                <span class="text-[var(--muted-foreground,#475569)] shrink-0">民國</span>
-                <input id="dec-birth-y" type="text" placeholder="年" oninput="syncDateFields('dec-birth', 'roc')"
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <select id="dec-birth-era" onchange="syncDateFields('dec-birth', 'era')"
+                  class="px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] font-medium shrink-0"
+                  title="選擇年號（自動換算為民國年顯示）">
+                  <option value="roc">民國</option>
+                  <option value="showa">昭和</option>
+                  <option value="taisho">大正</option>
+                  <option value="meiji">明治</option>
+                  <option value="heisei">平成</option>
+                  <option value="reiwa">令和</option>
+                  <option value="ad">西元</option>
+                </select>
+                <input id="dec-birth-y" type="text" placeholder="年" oninput="syncDateFields('dec-birth', 'roc')" onblur="normalizeYearInputOnBlur('dec-birth', true)"
                   class="w-14 px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
                 <span>年</span>
                 <input id="dec-birth-m" type="text" placeholder="月" oninput="syncDateFields('dec-birth', 'roc')"
@@ -665,17 +675,28 @@
                 <input id="dec-birth-iso" type="date" onchange="syncDateFields('dec-birth', 'iso')"
                   class="ml-auto px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-xs w-32" title="用西元日曆選取自動換算民國" />
               </div>
+              <div id="dec-birth-era-hint" class="hidden text-[11px] font-semibold text-[var(--primary,#2563eb)]"></div>
             </div>
 
             <!-- 被繼承人死亡日期 -->
             <div class="space-y-1 text-xs">
               <div class="flex items-center justify-between">
                 <label class="text-[var(--muted-foreground,#475569)] font-medium">死亡年月日</label>
-                <span class="text-[var(--muted-foreground,#475569)] text-[11px]">系統表橫線將從此處延伸至子女欄</span>
+                <span class="text-[var(--muted-foreground,#475569)] text-[11px]">支援昭和／大正／明治自動換算民國</span>
               </div>
-              <div class="flex items-center gap-1.5">
-                <span class="text-[var(--muted-foreground,#475569)] shrink-0">民國</span>
-                <input id="dec-death-y" type="text" placeholder="年" oninput="syncDateFields('dec-death', 'roc')"
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <select id="dec-death-era" onchange="syncDateFields('dec-death', 'era')"
+                  class="px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] font-medium shrink-0"
+                  title="選擇年號（自動換算為民國年顯示）">
+                  <option value="roc">民國</option>
+                  <option value="showa">昭和</option>
+                  <option value="taisho">大正</option>
+                  <option value="meiji">明治</option>
+                  <option value="heisei">平成</option>
+                  <option value="reiwa">令和</option>
+                  <option value="ad">西元</option>
+                </select>
+                <input id="dec-death-y" type="text" placeholder="年" oninput="syncDateFields('dec-death', 'roc')" onblur="normalizeYearInputOnBlur('dec-death', true)"
                   class="w-14 px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
                 <span>年</span>
                 <input id="dec-death-m" type="text" placeholder="月" oninput="syncDateFields('dec-death', 'roc')"
@@ -687,6 +708,7 @@
                 <input id="dec-death-iso" type="date" onchange="syncDateFields('dec-death', 'iso')"
                   class="ml-auto px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-xs w-32" title="用西元日曆選取自動換算民國" />
               </div>
+              <div id="dec-death-era-hint" class="hidden text-[11px] font-semibold text-[var(--primary,#2563eb)]"></div>
             </div>
 
             <div class="grid grid-cols-12 gap-2.5 text-xs">
@@ -797,10 +819,20 @@
 
             <!-- 3. 出生年月日 -->
             <div class="space-y-1 text-xs">
-              <label class="block text-[var(--muted-foreground,#475569)] font-semibold">③ 出生年月日（選填）</label>
-              <div class="flex items-center gap-1.5">
-                <span class="text-[var(--muted-foreground,#475569)] shrink-0">民國</span>
-                <input id="heir-birth-y" type="text" placeholder="年" oninput="syncDateFields('heir-birth', 'roc', false)"
+              <label class="block text-[var(--muted-foreground,#475569)] font-semibold">③ 出生年月日（選填，支援昭和／大正／明治換算）</label>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <select id="heir-birth-era" onchange="syncDateFields('heir-birth', 'era', false)"
+                  class="px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] font-medium shrink-0"
+                  title="選擇年號（自動換算為民國年顯示）">
+                  <option value="roc">民國</option>
+                  <option value="showa">昭和</option>
+                  <option value="taisho">大正</option>
+                  <option value="meiji">明治</option>
+                  <option value="heisei">平成</option>
+                  <option value="reiwa">令和</option>
+                  <option value="ad">西元</option>
+                </select>
+                <input id="heir-birth-y" type="text" placeholder="年" oninput="syncDateFields('heir-birth', 'roc', false)" onblur="normalizeYearInputOnBlur('heir-birth', false)"
                   class="w-14 px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
                 <span>年</span>
                 <input id="heir-birth-m" type="text" placeholder="月" oninput="syncDateFields('heir-birth', 'roc', false)"
@@ -812,6 +844,7 @@
                 <input id="heir-birth-iso" type="date" onchange="syncDateFields('heir-birth', 'iso', false)"
                   class="ml-auto px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-xs w-32" />
               </div>
+              <div id="heir-birth-era-hint" class="hidden text-[11px] font-semibold text-[var(--primary,#2563eb)]"></div>
             </div>
 
             <!-- 4. 死亡年月日（如在世可留空） -->
@@ -820,9 +853,19 @@
                 <label class="text-[var(--muted-foreground,#475569)] font-semibold">④ 死亡年月日（在世者請留空）</label>
                 <button type="button" onclick="clearDateInputs('heir-death')" class="text-[11px] text-[var(--link,#2563eb)] hover:underline">清除死亡日期</button>
               </div>
-              <div class="flex items-center gap-1.5">
-                <span class="text-[var(--muted-foreground,#475569)] shrink-0">民國</span>
-                <input id="heir-death-y" type="text" placeholder="年" oninput="syncDateFields('heir-death', 'roc', false)"
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <select id="heir-death-era" onchange="syncDateFields('heir-death', 'era', false)"
+                  class="px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] font-medium shrink-0"
+                  title="選擇年號（自動換算為民國年顯示）">
+                  <option value="roc">民國</option>
+                  <option value="showa">昭和</option>
+                  <option value="taisho">大正</option>
+                  <option value="meiji">明治</option>
+                  <option value="heisei">平成</option>
+                  <option value="reiwa">令和</option>
+                  <option value="ad">西元</option>
+                </select>
+                <input id="heir-death-y" type="text" placeholder="年" oninput="syncDateFields('heir-death', 'roc', false)" onblur="normalizeYearInputOnBlur('heir-death', false)"
                   class="w-14 px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-center" />
                 <span>年</span>
                 <input id="heir-death-m" type="text" placeholder="月" oninput="syncDateFields('heir-death', 'roc', false)"
@@ -834,6 +877,7 @@
                 <input id="heir-death-iso" type="date" onchange="syncDateFields('heir-death', 'iso', false)"
                   class="ml-auto px-1.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-xs w-32" />
               </div>
+              <div id="heir-death-era-hint" class="hidden text-[11px] font-semibold text-[var(--primary,#2563eb)]"></div>
             </div>
 
             <!-- 5. 身分證字號與戶籍地 -->
@@ -1348,6 +1392,84 @@
       return Boolean(dObj && (String(dObj.y).trim() || String(dObj.m).trim() || String(dObj.d).trim()));
     }
 
+    function parseChineseOrArabicNum(str) {
+      const s = String(str || "").trim();
+      if (!s) return NaN;
+      if (s === "元") return 1;
+      if (/^\d+$/.test(s)) return parseInt(s, 10);
+      const map = { "零": 0, "〇": 0, "一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9 };
+      if (s.includes("十")) {
+        const parts = s.split("十");
+        const tens = parts[0] === "" ? 1 : map[parts[0]];
+        const ones = parts[1] === "" ? 0 : map[parts[1]];
+        if (tens !== undefined && ones !== undefined) return tens * 10 + ones;
+      }
+      if (s.length === 1 && map[s] !== undefined) return map[s];
+      return NaN;
+    }
+
+    function rocNumberToStorageStr(rocNum) {
+      if (isNaN(rocNum)) return "";
+      return rocNum <= 0 ? `前${1 - rocNum}` : String(rocNum);
+    }
+
+    function parseEraYearText(rawStr) {
+      const s = String(rawStr || "").trim().replace(/\s+/g, "").replace(/年$/, "");
+      if (!s) return "";
+      const eraOffsets = [
+        { key: "明治", base: 1867 },
+        { key: "大正", base: 1911 },
+        { key: "昭和", base: 1925 },
+        { key: "平成", base: 1988 },
+        { key: "令和", base: 2018 },
+        { key: "西元", base: 0 }
+      ];
+      for (const { key, base } of eraOffsets) {
+        if (s.startsWith(key)) {
+          const num = parseChineseOrArabicNum(s.slice(key.length));
+          if (!isNaN(num) && num >= 1) {
+            const western = base + num;
+            return rocNumberToStorageStr(western - 1911);
+          }
+        }
+      }
+      if (s.startsWith("民國")) return s.slice(2);
+      if (s.startsWith("民前")) return `前${s.slice(2)}`;
+      if (/^\d{4}$/.test(s)) {
+        const gy = parseInt(s, 10);
+        if (gy >= 1800 && gy <= 2200) return rocNumberToStorageStr(gy - 1911);
+      }
+      return String(rawStr || "").trim();
+    }
+
+    function convertEraToRocYear(era, rawYear) {
+      const trimmed = String(rawYear || "").trim();
+      if (!trimmed) return "";
+      if (!era || era === "roc") {
+        return parseEraYearText(trimmed);
+      }
+      const num = parseChineseOrArabicNum(trimmed.replace(/年$/, ""));
+      if (isNaN(num) || num < 1) return trimmed;
+      const baseMap = {
+        meiji: 1867,
+        taisho: 1911,
+        showa: 1925,
+        heisei: 1988,
+        reiwa: 2018,
+        ad: 0
+      };
+      const base = baseMap[era];
+      if (base === undefined) return trimmed;
+      const western = base + num;
+      return rocNumberToStorageStr(western - 1911);
+    }
+
+    function formatEraHintLabel(rocStr) {
+      if (!rocStr) return "";
+      if (rocStr.startsWith("前")) return `民前 ${rocStr.slice(1)} 年`;
+      return `民國 ${rocStr} 年`;
+    }
+
     function formatDateObj(dObj) {
       if (!hasDate(dObj)) return "";
       const y = String(dObj.y || "").trim();
@@ -1355,18 +1477,25 @@
       const d = String(dObj.d || "").trim();
       const fmt = appState.config.dateFormat;
 
+      const isPre = y.startsWith("前");
+      const preNum = isPre ? parseInt(y.slice(1), 10) : NaN;
+      const rocNum = isPre ? (isNaN(preNum) ? NaN : 1 - preNum) : (!isNaN(Number(y)) && y !== "" ? Number(y) : NaN);
+
       if (fmt === "iso") {
-        const gregY = y && !isNaN(Number(y)) ? Number(y) + 1911 : y;
+        const gregY = !isNaN(rocNum) ? rocNum + 1911 : y;
         const mm = m ? m.padStart(2, "0") : "  ";
         const dd = d ? d.padStart(2, "0") : "  ";
         return `${gregY}-${mm}-${dd}`;
       }
       if (fmt === "roc_short") {
-        return `民國 ${y || "  "}.${m ? m.padStart(2, "0") : "  "}.${d ? d.padStart(2, "0") : "  "}`;
+        const eraPrefix = isPre ? "民前" : "民國";
+        const yDisp = isPre ? y.slice(1) : (y || "  ");
+        return `${eraPrefix} ${yDisp}.${m ? m.padStart(2, "0") : "  "}.${d ? d.padStart(2, "0") : "  "}`;
       }
-      // 預設：民國 XX 年 XX 月 XX 日
-      let parts = "民國 ";
-      parts += (y ? `${y} 年 ` : "　　年 ");
+      // 預設：民國 XX 年 XX 月 XX 日（或 民前 XX 年 XX 月 XX 日）
+      let parts = isPre ? "民前 " : "民國 ";
+      const yDisp = isPre ? y.slice(1) : y;
+      parts += (yDisp ? `${yDisp} 年 ` : "　　年 ");
       parts += (m ? `${m} 月 ` : "　月 ");
       parts += (d ? `${d} 日` : "　日");
       return parts;
@@ -1374,7 +1503,8 @@
 
     function rocToIsoString(dObj) {
       if (!dObj) return "";
-      const ry = parseInt(dObj.y, 10);
+      const yRaw = String(dObj.y || "").trim();
+      const ry = yRaw.startsWith("前") ? 1 - parseInt(yRaw.slice(1), 10) : parseInt(yRaw, 10);
       const rm = parseInt(dObj.m, 10);
       const rd = parseInt(dObj.d, 10);
       if (!isNaN(ry) && !isNaN(rm) && !isNaN(rd) && rm >= 1 && rm <= 12 && rd >= 1 && rd <= 31) {
@@ -1387,20 +1517,36 @@
     }
 
     function syncDateFields(prefix, source, triggerDecedentSave = true) {
+      const eraEl = document.getElementById(`${prefix}-era`);
       const yEl = document.getElementById(`${prefix}-y`);
       const mEl = document.getElementById(`${prefix}-m`);
       const dEl = document.getElementById(`${prefix}-d`);
       const isoEl = document.getElementById(`${prefix}-iso`);
+      const hintEl = document.getElementById(`${prefix}-era-hint`);
 
       if (source === "iso" && isoEl && isoEl.value) {
         const [gy, gm, gd] = isoEl.value.split("-").map(Number);
         if (gy && gm && gd) {
-          yEl.value = String(gy - 1911);
+          if (eraEl) eraEl.value = "roc";
+          yEl.value = rocNumberToStorageStr(gy - 1911);
           mEl.value = String(gm).padStart(2, "0");
           dEl.value = String(gd).padStart(2, "0");
+          if (hintEl) hintEl.classList.add("hidden");
         }
-      } else if (source === "roc" && isoEl) {
-        isoEl.value = rocToIsoString({ y: yEl?.value, m: mEl?.value, d: dEl?.value });
+      } else {
+        const era = eraEl ? eraEl.value : "roc";
+        const convertedY = convertEraToRocYear(era, yEl?.value);
+        if (hintEl) {
+          if (era !== "roc" && convertedY) {
+            hintEl.textContent = `已自動換算為：${formatEraHintLabel(convertedY)}`;
+            hintEl.classList.remove("hidden");
+          } else {
+            hintEl.classList.add("hidden");
+          }
+        }
+        if (isoEl) {
+          isoEl.value = rocToIsoString({ y: convertedY, m: mEl?.value, d: dEl?.value });
+        }
       }
 
       if (triggerDecedentSave && (prefix === "dec-birth" || prefix === "dec-death")) {
@@ -1408,12 +1554,30 @@
       }
     }
 
+    function normalizeYearInputOnBlur(prefix, triggerDecedentSave = true) {
+      const eraEl = document.getElementById(`${prefix}-era`);
+      const yEl = document.getElementById(`${prefix}-y`);
+      if (!yEl) return;
+      const era = eraEl ? eraEl.value : "roc";
+      if (era === "roc") {
+        const converted = parseEraYearText(yEl.value);
+        if (converted && converted !== yEl.value.trim()) {
+          yEl.value = converted;
+          syncDateFields(prefix, "roc", triggerDecedentSave);
+        }
+      }
+    }
+
     function setDateInputs(prefix, dObj) {
+      const eraEl = document.getElementById(`${prefix}-era`);
       const yEl = document.getElementById(`${prefix}-y`);
       const mEl = document.getElementById(`${prefix}-m`);
       const dEl = document.getElementById(`${prefix}-d`);
       const isoEl = document.getElementById(`${prefix}-iso`);
+      const hintEl = document.getElementById(`${prefix}-era-hint`);
       if (!yEl) return;
+      if (eraEl) eraEl.value = "roc";
+      if (hintEl) hintEl.classList.add("hidden");
       yEl.value = dObj?.y || "";
       mEl.value = dObj?.m || "";
       dEl.value = dObj?.d || "";
@@ -1422,8 +1586,10 @@
     }
 
     function getDateInputs(prefix) {
+      const era = document.getElementById(`${prefix}-era`)?.value || "roc";
+      const rawY = (document.getElementById(`${prefix}-y`)?.value || "").trim();
       return {
-        y: (document.getElementById(`${prefix}-y`)?.value || "").trim(),
+        y: convertEraToRocYear(era, rawY),
         m: (document.getElementById(`${prefix}-m`)?.value || "").trim(),
         d: (document.getElementById(`${prefix}-d`)?.value || "").trim()
       };
@@ -1624,7 +1790,7 @@
       const sp = appState.spouses.find((s) => s.id === id);
       if (sp) {
         if (!sp[type]) sp[type] = { y: "", m: "", d: "" };
-        sp[type][part] = val.trim();
+        sp[type][part] = part === "y" ? parseEraYearText(val) : val.trim();
         const isoEl = document.getElementById(`sp-${type}-iso-${id}`);
         if (isoEl) isoEl.value = rocToIsoString(sp[type]);
         renderChart();
@@ -1637,7 +1803,7 @@
         const [gy, gm, gd] = isoVal.split("-").map(Number);
         if (gy && gm && gd) {
           sp[type] = {
-            y: String(gy - 1911),
+            y: rocNumberToStorageStr(gy - 1911),
             m: String(gm).padStart(2, "0"),
             d: String(gd).padStart(2, "0")
           };
@@ -1815,7 +1981,7 @@
       const sp = heirSpousesDraft.find((s) => s.id === spId);
       if (sp) {
         if (!sp[type]) sp[type] = { y: "", m: "", d: "" };
-        sp[type][part] = val.trim();
+        sp[type][part] = part === "y" ? parseEraYearText(val) : val.trim();
       }
     }
 
@@ -1826,7 +1992,7 @@
       if (parts.length === 3) {
         const rocY = parseInt(parts[0], 10) - 1911;
         sp[type] = {
-          y: rocY > 0 ? String(rocY) : String(rocY - 1),
+          y: rocNumberToStorageStr(rocY),
           m: String(parseInt(parts[1], 10)),
           d: String(parseInt(parts[2], 10))
         };
