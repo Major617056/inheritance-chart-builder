@@ -431,7 +431,11 @@
       background-color: rgba(254, 249, 195, 0.7);
     }
 
-    /* 列印專用樣式（修正跨頁與外層容器截斷問題） */
+    /* 列印專用樣式（隱藏瀏覽器頁首頁尾與外層介面，只保留繼承系統表抬頭與圖表） */
+    @page {
+      size: auto;
+      margin: 0mm;
+    }
     @media print {
       html, body, main, section {
         height: auto !important;
@@ -439,6 +443,8 @@
         overflow: visible !important;
         display: block !important;
         background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
       }
       .no-print,
       .quick-action-bar {
@@ -448,7 +454,7 @@
         position: static !important;
         width: auto !important;
         margin: 0 !important;
-        padding: 16px !important;
+        padding: 14mm !important;
         box-shadow: none !important;
         border: none !important;
         transform: none !important;
@@ -516,9 +522,13 @@
         title="匯出包含「繼承系統表（圖表排版）」與「繼承人明細清單」雙工作表之 Excel (.xlsx) 檔案">
         📊 匯出 Excel (.xlsx)
       </button>
-      <button id="btn-export-png" type="button" onclick="exportAsPNG()"
+      <button id="btn-export-jpeg" type="button" onclick="exportAsImage('jpeg')"
         class="px-3 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--secondary,#e2e8f0)] text-[var(--secondary-foreground,#0f172a)] hover:opacity-90 font-semibold transition">
-        下載圖片 (PNG)
+        下載圖片 (JPEG)
+      </button>
+      <button id="btn-export-png" type="button" onclick="exportAsImage('png')"
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] hover:opacity-80 font-medium transition">
+        PNG
       </button>
       <button id="btn-print" type="button" onclick="printChart()"
         class="px-3 py-1.5 rounded-md bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] hover:opacity-90 font-semibold shadow-sm transition">
@@ -2550,16 +2560,25 @@
       };
     }
 
+    function triggerBlobDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 1500);
+    }
+
     function exportProjectJSON() {
       const dataStr = JSON.stringify(appState, null, 2);
       const blob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
       const decName = (appState.decedent.name || "未命名").replace(/[\\/:*?"<>|]/g, "");
-      a.href = url;
-      a.download = `繼承系統表_${decName}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      triggerBlobDownload(blob, `繼承系統表_${decName}.json`);
     }
 
     function importProjectJSON(event) {
@@ -3180,28 +3199,36 @@
       };
 
       const zipBlob = createZipBlob(filesMap);
-      const url = URL.createObjectURL(zipBlob);
-      const a = document.createElement("a");
       const decName = (dec.name || "未命名").replace(/[\\/:*?"<>|]/g, "");
-      a.href = url;
-      a.download = `繼承系統表_${decName}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
+      triggerBlobDownload(zipBlob, `繼承系統表_${decName}.xlsx`);
     }
 
     function printChart() {
       const prevZoom = currentZoom;
+      const titleEl = document.getElementById("chart-header-title");
+      const hadHiddenTitle = titleEl && titleEl.classList.contains("hidden");
+      const prevTitleText = titleEl ? titleEl.textContent : "";
+
+      if (titleEl && hadHiddenTitle) {
+        titleEl.textContent = "繼 承 系 統 表";
+        titleEl.classList.remove("hidden");
+      }
+
       currentZoom = 1;
       applyZoom();
       setTimeout(() => {
         window.print();
+        if (titleEl && hadHiddenTitle) {
+          titleEl.textContent = prevTitleText;
+          titleEl.classList.add("hidden");
+        }
         currentZoom = prevZoom;
         applyZoom();
       }, 120);
     }
 
-    // 將系統表直接繪製並匯出為高解析度白底 PNG 圖片
-    async function exportAsPNG() {
+    // 使用純 Canvas 2D 直接依 DOM 座標繪製高解析度白底圖片（100% 離線相容所有瀏覽器，無 foreignObject 跨域/空白問題）
+    async function exportAsImage(format = "jpeg") {
       const sheet = document.getElementById("printable-area");
       const prevSelected = selectedNodeId;
       selectedNodeId = null;
@@ -3212,134 +3239,160 @@
 
       await new Promise((r) => setTimeout(r, 80));
 
-      const width = sheet.scrollWidth;
-      const height = sheet.scrollHeight;
-      const scale = 2;
+      try {
+        const sheetRect = sheet.getBoundingClientRect();
+        const width = Math.max(1, Math.ceil(sheet.scrollWidth));
+        const height = Math.max(1, Math.ceil(sheet.scrollHeight));
+        const scale = 2;
 
-      // 複製節點並移除 .no-print 元素以轉成 SVG ForeignObject
-      const clone = sheet.cloneNode(true);
-      clone.querySelectorAll(".no-print, .quick-action-bar").forEach((el) => el.remove());
-      clone.style.transform = "none";
-      clone.style.boxShadow = "none";
-      clone.style.margin = "0";
-      clone.style.backgroundColor = "#ffffff";
-      clone.style.color = "#111827";
-
-      const inlineStyle = `
-        * { box-sizing: border-box; }
-        .font-kai { font-family: "DFKai-SB", "BiauKai", "標楷體", "Kaiti TC", "STKaiti", serif; }
-        .font-serif-tc { font-family: "PMingLiU", "新細明體", serif; }
-        .font-sans-tc { font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; }
-        .flex { display: flex; }
-        .inline-flex { display: inline-flex; }
-        .flex-col { flex-direction: column; }
-        .items-start { align-items: flex-start; }
-        .items-center { align-items: center; }
-        .items-baseline { align-items: baseline; }
-        .justify-start { justify-content: flex-start; }
-        .relative { position: relative; }
-        .absolute { position: absolute; }
-        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-        .hidden { display: none !important; }
-        .text-center { text-align: center; }
-        .text-2xl { font-size: 24px; line-height: 32px; }
-        .text-xl { font-size: 20px; line-height: 28px; }
-        .text-base { font-size: 16px; line-height: 24px; }
-        .text-sm { font-size: 14px; line-height: 20px; }
-        .text-xs { font-size: 12px; line-height: 16px; }
-        .font-bold { font-weight: 700; }
-        .font-medium { font-weight: 500; }
-        .tracking-wide { letter-spacing: 0.025em; }
-        .tracking-widest { letter-spacing: 0.1em; }
-        .whitespace-nowrap { white-space: nowrap; }
-        .whitespace-pre-line { white-space: pre-line; }
-        .p-8, .md\\:p-12 { padding: 40px; }
-        .p-2\\.5 { padding: 10px; }
-        .px-2\\.5 { padding-left: 10px; padding-right: 10px; }
-        .py-1\\.5 { padding-top: 6px; padding-bottom: 6px; }
-        .py-2 { padding-top: 8px; padding-bottom: 8px; }
-        .pr-16 { padding-right: 64px; }
-        .pr-14 { padding-right: 56px; }
-        .text-gray-600 { color: #4b5563; }
-        .text-gray-800 { color: #1f2937; }
-        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-        .pl-2 { padding-left: 8px; }
-        .pl-4 { padding-left: 16px; }
-        .pl-8 { padding-left: 32px; }
-        .mb-8 { margin-bottom: 32px; }
-        .mt-12 { margin-top: 48px; }
-        .mt-2 { margin-top: 8px; }
-        .mt-1\\.5 { margin-top: 6px; }
-        .mt-1 { margin-top: 4px; }
-        .mt-0\\.5 { margin-top: 2px; }
-        .ml-1\\.5 { margin-left: 6px; }
-        .ml-2 { margin-left: 8px; }
-        .mr-1 { margin-right: 4px; }
-        .pt-1 { padding-top: 4px; }
-        .pt-4 { padding-top: 16px; }
-        .border-t { border-top: 1px solid #9ca3af; }
-        .border-gray-300 { border-color: #d1d5db; }
-        .space-y-1 > * + * { margin-top: 4px; }
-        .space-y-4 > * + * { margin-top: 16px; }
-        .space-y-5 > * + * { margin-top: 20px; }
-        .space-y-3 > * + * { margin-top: 12px; }
-        .gap-1 { gap: 4px; }
-        .gap-1\\.5 { gap: 6px; }
-        .gap-2 { gap: 8px; }
-      `;
-
-      const serialized = new XMLSerializer().serializeToString(clone);
-      const svgData = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">
-          <style>${inlineStyle}</style>
-          <rect width="100%" height="100%" fill="#ffffff" />
-          <foreignObject width="100%" height="100%">
-            ${serialized}
-          </foreignObject>
-        </svg>
-      `;
-
-      const img = new Image();
-      const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(svgBlob);
-
-      img.onload = () => {
         const canvas = document.createElement("canvas");
         canvas.width = width * scale;
         canvas.height = height * scale;
         const ctx = canvas.getContext("2d");
+        ctx.scale(scale, scale);
+
+        // 1. 白底（JPEG 不支援透明，必須先鋪白底）
         ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
+        ctx.fillRect(0, 0, width, height);
 
-        canvas.toBlob((blob) => {
-          if (!blob) return;
-          const dlUrl = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          const decName = (appState.decedent.name || "系統表").replace(/[\\/:*?"<>|]/g, "");
-          a.href = dlUrl;
-          a.download = `繼承系統表_${decName}.png`;
-          a.click();
-          URL.revokeObjectURL(dlUrl);
-        }, "image/png");
+        // 2. 繪製可見邊框（例如子女配偶分隔線、切結語上分隔線）
+        sheet.querySelectorAll("*").forEach((el) => {
+          if (el === sheet || el.closest(".no-print") || el.closest(".quick-action-bar")) return;
+          const cs = getComputedStyle(el);
+          if (cs.display === "none" || cs.visibility === "hidden") return;
+          const btw = parseFloat(cs.borderTopWidth) || 0;
+          if (btw > 0 && cs.borderTopStyle !== "none") {
+            const r = el.getBoundingClientRect();
+            if (r.width > 0 && r.height >= 0) {
+              ctx.strokeStyle = cs.borderTopColor || "#d1d5db";
+              ctx.lineWidth = btw;
+              ctx.beginPath();
+              const y = r.top - sheetRect.top + btw / 2;
+              ctx.moveTo(r.left - sheetRect.left, y);
+              ctx.lineTo(r.right - sheetRect.left, y);
+              ctx.stroke();
+            }
+          }
+        });
 
+        // 3. 繪製 SVG 連接線（橫線、垂直幹線與分支短橫線）
+        const svg = document.getElementById("chart-lines-svg");
+        if (svg) {
+          const svgRect = svg.getBoundingClientRect();
+          const ox = svgRect.left - sheetRect.left;
+          const oy = svgRect.top - sheetRect.top;
+          svg.querySelectorAll("line").forEach((ln) => {
+            const x1 = parseFloat(ln.getAttribute("x1") || "0") + ox;
+            const y1 = parseFloat(ln.getAttribute("y1") || "0") + oy;
+            const x2 = parseFloat(ln.getAttribute("x2") || "0") + ox;
+            const y2 = parseFloat(ln.getAttribute("y2") || "0") + oy;
+            ctx.strokeStyle = ln.getAttribute("stroke") || "#111827";
+            ctx.lineWidth = parseFloat(ln.getAttribute("stroke-width") || "1.8");
+            ctx.lineCap = "square";
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          });
+          svg.querySelectorAll("path").forEach((p) => {
+            const d = p.getAttribute("d");
+            if (!d) return;
+            ctx.save();
+            ctx.translate(ox, oy);
+            ctx.strokeStyle = p.getAttribute("stroke") || "#111827";
+            ctx.lineWidth = parseFloat(p.getAttribute("stroke-width") || "1.8");
+            ctx.stroke(new Path2D(d));
+            ctx.restore();
+          });
+        }
+
+        // 4. 依文字節點精準座標繪製所有文字
+        const walker = document.createTreeWalker(sheet, NodeFilter.SHOW_TEXT, null);
+        let textNode;
+        while ((textNode = walker.nextNode())) {
+          const rawVal = textNode.nodeValue;
+          if (!rawVal || !rawVal.trim()) continue;
+          const parentEl = textNode.parentElement;
+          if (!parentEl) continue;
+          if (parentEl.closest(".no-print") || parentEl.closest(".quick-action-bar") || parentEl.closest("svg")) continue;
+
+          // 檢查祖先元素是否隱藏
+          let hiddenAncestor = false;
+          let cur = parentEl;
+          while (cur && cur !== sheet) {
+            const ccs = getComputedStyle(cur);
+            if (ccs.display === "none" || ccs.visibility === "hidden") {
+              hiddenAncestor = true;
+              break;
+            }
+            cur = cur.parentElement;
+          }
+          if (hiddenAncestor) continue;
+
+          const cs = getComputedStyle(parentEl);
+          ctx.font = `${cs.fontStyle || "normal"} ${cs.fontWeight || "400"} ${cs.fontSize || "16px"} ${cs.fontFamily || "sans-serif"}`;
+          ctx.fillStyle = cs.color || "#111827";
+          ctx.textBaseline = "top";
+
+          // 若文字含換行（例如底部切結語），逐行透過 Range 量測座標
+          if (rawVal.includes("\n")) {
+            let offset = 0;
+            const lines = rawVal.split("\n");
+            for (const line of lines) {
+              const trimmed = line.replace(/^\s+/, "");
+              const leadLen = line.length - trimmed.length;
+              if (trimmed.length > 0) {
+                const range = document.createRange();
+                range.setStart(textNode, offset + leadLen);
+                range.setEnd(textNode, offset + line.length);
+                const r = range.getBoundingClientRect();
+                if (r.width > 0 && r.height > 0) {
+                  ctx.fillText(trimmed, r.left - sheetRect.left, r.top - sheetRect.top);
+                }
+              }
+              offset += line.length + 1;
+            }
+          } else {
+            const trimmed = rawVal.trim();
+            const startIdx = rawVal.indexOf(trimmed);
+            const range = document.createRange();
+            range.setStart(textNode, startIdx);
+            range.setEnd(textNode, startIdx + trimmed.length);
+            const r = range.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0) {
+              ctx.fillText(trimmed, r.left - sheetRect.left, r.top - sheetRect.top);
+            }
+          }
+        }
+
+        const isJpeg = format === "jpeg" || format === "jpg";
+        const mime = isJpeg ? "image/jpeg" : "image/png";
+        const ext = isJpeg ? "jpg" : "png";
+        const decName = (appState.decedent.name || "系統表").replace(/[\\/:*?"<>|]/g, "");
+
+        await new Promise((resolve) => {
+          canvas.toBlob((blob) => {
+            if (blob) {
+              triggerBlobDownload(blob, `繼承系統表_${decName}.${ext}`);
+            } else {
+              alert("圖片產生失敗，請改用「列印 / 另存 PDF」輸出高畫質檔案。");
+            }
+            resolve();
+          }, mime, isJpeg ? 0.95 : undefined);
+        });
+      } catch (err) {
+        console.error("匯出圖片失敗：", err);
+        alert("匯出圖片時發生錯誤，請改用「列印 / 另存 PDF」輸出高畫質檔案。");
+      } finally {
         selectedNodeId = prevSelected;
         currentZoom = prevZoom;
         applyZoom();
         renderChart();
-      };
+      }
+    }
 
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        selectedNodeId = prevSelected;
-        currentZoom = prevZoom;
-        applyZoom();
-        renderChart();
-        alert("若瀏覽器限制匯出圖片，請點擊右上角「列印 / 另存 PDF」輸出高畫質檔案。");
-      };
-
-      img.src = url;
+    function exportAsPNG() {
+      return exportAsImage("png");
     }
 
     // 資安強化：完整跳脫 HTML 特殊字元（含單引號 ' 與雙引號 "）以防範 DOM XSS 與屬性注入
