@@ -113,8 +113,31 @@
     aside input.w-11 { width: 3.25rem; }
     aside input.w-10 { width: 3rem; }
     aside input.w-9 { width: 2.75rem; }
-    aside input[type="date"].w-32 { width: 9.25rem; }
-    aside input[type="date"].w-28 { width: 8.75rem; }
+    /* 西元日曆選取器：縮成日曆圖示按鈕，與年月日同列，不再換行 */
+    aside input[type="date"] {
+      width: 2.25rem !important;
+      min-width: 2.25rem;
+      margin-left: 2px !important;
+      padding: 0.3rem 0.25rem !important;
+      color: transparent;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+    }
+    /* 較窄螢幕（1024～1279px）時縮小年月日欄位，讓日曆圖示保持在同一列 */
+    @media (max-width: 1279px) {
+      aside input.w-14 { width: 3.4rem; }
+      aside input.w-11 { width: 2.6rem; }
+      aside .gap-1\.5:has(> input[type="date"]) { gap: 0.25rem; }
+    }
+    aside input[type="date"]::-webkit-datetime-edit,
+    aside input[type="date"]::-webkit-datetime-edit-fields-wrapper { display: none; }
+    aside input[type="date"]::-webkit-calendar-picker-indicator {
+      margin: 0;
+      cursor: pointer;
+      opacity: 0.75;
+    }
+    aside input[type="date"]:hover::-webkit-calendar-picker-indicator { opacity: 1; }
     aside span.w-14,
     aside span.w-12 { width: 4.5rem; }
 
@@ -621,9 +644,21 @@
         <h1 class="text-base font-bold tracking-tight text-[var(--foreground,#0f172a)] leading-tight">
           繼承系統表產生器
         </h1>
-        <span class="self-start px-2 py-0.5 rounded-full text-[11px] font-bold" style="background-color:#dcfce7;color:#166534;border:1px solid #86efac;">
-          🔒 本機離線作業
-        </span>
+        <div class="flex flex-wrap items-center text-[11px]" style="column-gap:12px;row-gap:4px;">
+          <span class="px-2 py-0.5 rounded-full font-bold cursor-help" style="background-color:#dcfce7;color:#166534;border:1px solid #86efac;"
+            title="本系統所有資料（姓名、出生／死亡年月日、備註等）只會在您的本機電腦瀏覽器中作業，絕不會上傳至網路或任何外部伺服器（已啟用瀏覽器 CSP 安全策略強制封鎖所有對外連線），離線亦可安心使用。">
+            🔒 本機離線作業・資料不上傳
+          </span>
+          <label class="flex items-center gap-1 cursor-pointer select-none font-semibold text-[var(--muted-foreground,#475569)]" title="若在辦公室公用或他人電腦操作，建議取消勾選，避免關閉網頁後留下暫存紀錄">
+            <input id="chk-local-persist" type="checkbox" checked onchange="toggleLocalStoragePersist(this.checked)" class="accent-[var(--primary,#2563eb)]" />
+            <span>自動暫存</span>
+          </label>
+          <button type="button" onclick="clearLocalBrowserData()"
+            class="font-semibold text-[var(--error,#dc2626)] hover:underline"
+            title="立即清除瀏覽器 LocalStorage 中的暫存個資">
+            清除暫存
+          </button>
+        </div>
       </div>
     </div>
 
@@ -702,26 +737,6 @@
     </nav>
   </header>
 
-  <!-- 資安與隱私保護警示橫幅（列印時自動隱藏） -->
-  <div class="no-print privacy-banner px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-    <div class="flex items-center gap-2">
-      <span class="font-bold">🛡️ 【資料安全與隱私保護聲明】</span>
-      <span>
-        本系統所有資料（姓名、出生／死亡年月日、備註等）<strong>只會在您的本機電腦瀏覽器中作業，絕不會上傳至網路或任何外部伺服器</strong>（已啟用瀏覽器 CSP 安全策略強制封鎖所有對外連線），離線亦可安心使用。
-      </span>
-    </div>
-    <div class="flex items-center gap-3 shrink-0">
-      <label class="flex items-center gap-1.5 cursor-pointer select-none font-medium" title="若在辦公室公用或他人電腦操作，建議取消勾選，避免關閉網頁後留下暫存紀錄">
-        <input id="chk-local-persist" type="checkbox" checked onchange="toggleLocalStoragePersist(this.checked)" class="accent-[var(--primary,#2563eb)]" />
-        <span>自動暫存於本機瀏覽器</span>
-      </label>
-      <button type="button" onclick="clearLocalBrowserData()"
-        class="px-2 py-0.5 rounded border border-gray-400 bg-[var(--card,#ffffff)] text-[var(--error,#dc2626)] hover:bg-red-50 font-semibold transition"
-        title="立即清除瀏覽器 LocalStorage 中的暫存個資">
-        🗑️ 清除本機暫存
-      </button>
-    </div>
-  </div>
 
   <!-- 主工作區：左側輸入與編輯面板 + 右側即時繼承系統表預覽 -->
   <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-0">
@@ -867,14 +882,14 @@
               <div>
                 <h2 class="text-sm font-bold text-[var(--foreground,#0f172a)] flex items-center gap-1.5">
                   <span class="w-2 h-2 rounded-full bg-[var(--primary,#2563eb)]"></span>
-                  配偶資料（顯示於被繼承人下方）
+                  配偶資料
                 </h2>
                 <p class="text-xs text-[var(--muted-foreground,#475569)] mt-0.5">
-                  如同您的附圖，配偶會排列在左下方區塊
+                  配偶會顯示在被繼承人方塊的下方
                 </p>
               </div>
               <button type="button" onclick="addSpouse()"
-                class="px-2.5 py-1 rounded bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] text-xs font-medium hover:opacity-90 transition">
+                class="shrink-0 whitespace-nowrap px-2.5 py-1 rounded bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] text-xs font-medium hover:opacity-90 transition">
                 ＋ 新增配偶
               </button>
             </div>
@@ -1052,7 +1067,7 @@
               <div class="flex items-center justify-between">
                 <span class="font-semibold text-[var(--muted-foreground,#475569)]">⑤ 此成員之配偶（選填，預設稱謂：配偶）</span>
                 <button type="button" onclick="addHeirDraftSpouse()"
-                  class="px-2 py-0.5 rounded bg-[var(--secondary,#e2e8f0)] text-[var(--secondary-foreground,#0f172a)] hover:opacity-80 font-medium transition">
+                  class="shrink-0 whitespace-nowrap px-2 py-0.5 rounded bg-[var(--secondary,#e2e8f0)] text-[var(--secondary-foreground,#0f172a)] hover:opacity-80 font-medium transition">
                   ＋ 新增配偶
                 </button>
               </div>
@@ -1154,9 +1169,9 @@
       <div class="no-print px-4 py-2 border-b border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
         <div class="flex items-center gap-2 text-[var(--muted-foreground,#475569)]">
           <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span>💡 <strong>產出後修改方式：</strong>直接點擊下方圖表中的<strong>任何人名或區塊</strong>，即可修改資料、新增其下一代子女或調整順序！</span>
+          <span title="直接點擊下方圖表中的任何人名或區塊，即可修改資料、新增其下一代子女或調整順序">💡 <strong>點擊圖表中的人名</strong>即可直接修改、新增子女或調整順序</span>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 shrink-0">
           <button id="btn-undo" type="button" onclick="undoLastAction()" disabled
             class="px-2.5 py-0.5 rounded border border-[var(--border,#cbd5e1)] hover:bg-[var(--secondary,#e2e8f0)] disabled:opacity-40 font-medium transition"
             title="復原上一步變更 (Ctrl+Z)">
@@ -4408,6 +4423,14 @@
       _origRenderChart();
       saveStateToStorage();
     };
+
+    // 點擊日曆圖示任何位置都可開啟日期選取器
+    document.addEventListener("click", (e) => {
+      const el = e.target;
+      if (el && el.matches && el.matches('aside input[type="date"]') && typeof el.showPicker === "function") {
+        try { el.showPicker(); } catch (err) { /* ignore */ }
+      }
+    });
 
     const THEME_PREF_KEY = "inheritance_chart_theme_v1";
 
