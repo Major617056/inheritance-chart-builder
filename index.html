@@ -590,14 +590,20 @@
         🖼️ JPEG
       </button>
       <button id="btn-export-png" type="button" onclick="exportAsImage('png')"
-        class="px-2 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] hover:opacity-80 font-medium transition">
-        PNG
+        class="px-2.5 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] hover:opacity-80 font-semibold transition">
+        🏞️ PNG
       </button>
       <button id="btn-export-pdf" type="button" onclick="exportAsPdf()"
         style="background-color:#dc2626;color:#ffffff;"
-        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-semibold shadow-sm transition"
+        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-semibold shadow-sm transition inline-flex items-center gap-1.5"
         title="直接產出並下載 PDF 檔案（含「繼承系統表」與「繼承人明細一覽表」）">
-        📕 PDF
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="8" y1="13" x2="16" y2="13"/>
+          <line x1="8" y1="17" x2="13" y2="17"/>
+        </svg>
+        <span>PDF</span>
       </button>
       <button id="btn-print" type="button" onclick="printChart()"
         style="background-color:#1e293b;color:#ffffff;"
