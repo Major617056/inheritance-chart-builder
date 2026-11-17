@@ -590,10 +590,17 @@
               </div>
             </div>
 
-            <div class="text-xs">
-              <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">備註 / 身分證字號（選填）</label>
-              <input id="dec-note" type="text" placeholder="例如：身分證字號、最後住所或註記（可留空）" oninput="updateDecedentFromForm()"
-                class="w-full px-2.5 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)]" />
+            <div class="grid grid-cols-12 gap-2.5 text-xs">
+              <div class="col-span-5">
+                <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">身分證字號（選填）</label>
+                <input id="dec-id-number" type="text" placeholder="如：A123456789" oninput="updateDecedentFromForm()"
+                  class="w-full px-2.5 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)] font-mono" />
+              </div>
+              <div class="col-span-7">
+                <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">備註（選填）</label>
+                <input id="dec-note" type="text" placeholder="例如：最後住所或註記（可留空）" oninput="updateDecedentFromForm()"
+                  class="w-full px-2.5 py-1.5 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-[var(--foreground,#0f172a)]" />
+              </div>
             </div>
           </div>
 
@@ -724,7 +731,12 @@
               </div>
             </div>
 
-            <!-- 5. 備註 / 狀態 與 間隔點（⋮）設定 -->
+            <!-- 5. 身分證字號、備註 / 狀態 與 間隔點（⋮）設定 -->
+            <div class="text-xs pt-1">
+              <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">身分證字號（選填）</label>
+              <input id="heir-id-number" type="text" placeholder="如：A123456789（可留空）"
+                class="w-full px-2.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] font-mono" />
+            </div>
             <div class="grid grid-cols-12 gap-2 text-xs pt-1">
               <div class="col-span-7">
                 <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">狀態或備註（選填）</label>
@@ -872,7 +884,9 @@
                 <div class="text-xl font-bold tracking-wide leading-snug flex items-baseline gap-2">
                   <span id="render-dec-title">被繼承人</span>
                   <span id="render-dec-name">○○○</span>
+                  <span id="render-dec-deceased" class="text-base font-bold text-gray-800 hidden"></span>
                 </div>
+                <div id="render-dec-id-row" class="text-xs mt-1 pl-4 text-gray-800 font-mono hidden"></div>
                 <div id="render-dec-birth-row" class="text-sm mt-1.5 pl-4 text-gray-800"></div>
                 <div id="render-dec-death-row" class="text-base mt-1 pl-4 font-medium flex items-center">
                   <span id="render-dec-death-text">死亡日期：</span>
@@ -1323,6 +1337,7 @@
       // 被繼承人
       document.getElementById("dec-title").value = appState.decedent.title || "被繼承人";
       document.getElementById("dec-name").value = appState.decedent.name || "";
+      document.getElementById("dec-id-number").value = appState.decedent.idNumber || "";
       setDateInputs("dec-birth", appState.decedent.birth);
       setDateInputs("dec-death", appState.decedent.death);
       document.getElementById("dec-note").value = appState.decedent.note || "";
@@ -1346,6 +1361,7 @@
     function updateDecedentFromForm() {
       appState.decedent.title = document.getElementById("dec-title").value || "被繼承人";
       appState.decedent.name = document.getElementById("dec-name").value;
+      appState.decedent.idNumber = document.getElementById("dec-id-number").value.trim();
       appState.decedent.birth = getDateInputs("dec-birth");
       appState.decedent.death = getDateInputs("dec-death");
       appState.decedent.note = document.getElementById("dec-note").value;
@@ -1439,10 +1455,17 @@
               onchange="updateSpouseDateIso('${safeId}', 'death', this.value)"
               class="ml-auto px-1 py-0.5 rounded border border-[var(--border,#cbd5e1)] text-xs w-28" title="西元日曆選取自動換算民國" />
           </div>
-          <div>
-            <input type="text" value="${escapeHtml(sp.note || '')}" placeholder="配偶狀態或備註（如：存、繼承人、歿... 選填）"
-              oninput="updateSpouseField('${safeId}', 'note', this.value)"
-              class="w-full px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)]" />
+          <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-5">
+              <input type="text" value="${escapeHtml(sp.idNumber || '')}" placeholder="身分證字號（選填）"
+                oninput="updateSpouseField('${safeId}', 'idNumber', this.value)"
+                class="w-full px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)] font-mono" />
+            </div>
+            <div class="col-span-7">
+              <input type="text" value="${escapeHtml(sp.note || '')}" placeholder="狀態或備註（如：存、繼承人、歿...）"
+                oninput="updateSpouseField('${safeId}', 'note', this.value)"
+                class="w-full px-2 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--background,#f8fafc)]" />
+            </div>
           </div>
         </div>
       `;
@@ -1454,6 +1477,7 @@
         id: uid("sp"),
         title: "配偶",
         name: "○○○",
+        idNumber: "",
         birth: { y: "", m: "", d: "" },
         death: { y: "", m: "", d: "" },
         note: ""
@@ -1558,6 +1582,7 @@
       const parentId = document.getElementById("heir-parent-id").value || "root";
       const title = (document.getElementById("heir-title").value || "").trim() || "繼承人";
       const name = (document.getElementById("heir-name").value || "").trim() || "○○○";
+      const idNumber = (document.getElementById("heir-id-number").value || "").trim();
       const birth = getDateInputs("heir-birth");
       const death = getDateInputs("heir-death");
       const note = (document.getElementById("heir-note").value || "").trim();
@@ -1569,6 +1594,7 @@
           target.parentId = parentId;
           target.title = title;
           target.name = name;
+          target.idNumber = idNumber;
           target.birth = birth;
           target.death = death;
           target.note = note;
@@ -1580,6 +1606,7 @@
           parentId,
           title,
           name,
+          idNumber,
           birth,
           death,
           note,
@@ -1598,6 +1625,7 @@
       refreshParentDropdown(false);
       document.getElementById("heir-parent-id").value = keepParentId;
       document.getElementById("heir-name").value = "";
+      document.getElementById("heir-id-number").value = "";
       clearDateInputs("heir-birth");
       clearDateInputs("heir-death");
       document.getElementById("heir-note").value = "";
@@ -1623,6 +1651,7 @@
       document.getElementById("heir-parent-id").value = heir.parentId || "root";
       document.getElementById("heir-title").value = heir.title || "";
       document.getElementById("heir-name").value = heir.name || "";
+      document.getElementById("heir-id-number").value = heir.idNumber || "";
       setDateInputs("heir-birth", heir.birth);
       setDateInputs("heir-death", heir.death);
       document.getElementById("heir-note").value = heir.note || "";
@@ -1772,25 +1801,37 @@
     // =========================================================================
     // 直接文字微調模式 (contenteditable) 即時同步回 appState（防止修改丟失與 HTML 注入）
     // =========================================================================
+    function getInlineDeceasedInfo(deathFormatted, noteStr) {
+      const trimmedNote = (noteStr || "").trim();
+      if (trimmedNote === "歿" || trimmedNote === "(歿)" || trimmedNote === "（歿）") {
+        return { tag: trimmedNote, hideNote: true };
+      }
+      if (deathFormatted && !trimmedNote.includes("歿")) {
+        return { tag: "（歿）", hideNote: false };
+      }
+      return { tag: "", hideNote: false };
+    }
+
     function syncDirectEdit(role, id, field, el) {
       if (!el) return;
       const cleanText = (el.textContent || "").replace(/[\r\n]+/g, " ").trim();
       if (role === "decedent") {
-        if (field === "title" || field === "name" || field === "note") {
+        if (field === "title" || field === "name" || field === "note" || field === "idNumber") {
           appState.decedent[field] = cleanText;
           if (field === "title") document.getElementById("dec-title").value = cleanText;
           if (field === "name") document.getElementById("dec-name").value = cleanText;
+          if (field === "idNumber") document.getElementById("dec-id-number").value = cleanText;
           if (field === "note") document.getElementById("dec-note").value = cleanText;
         }
       } else if (role === "spouse") {
         const sp = appState.spouses.find((s) => s.id === id);
-        if (sp && (field === "title" || field === "name" || field === "note")) {
+        if (sp && (field === "title" || field === "name" || field === "note" || field === "idNumber")) {
           sp[field] = cleanText;
           renderSpouseEditorList();
         }
       } else if (role === "heir") {
         const h = appState.heirs.find((item) => item.id === id);
-        if (h && (field === "title" || field === "name" || field === "note")) {
+        if (h && (field === "title" || field === "name" || field === "note" || field === "idNumber")) {
           h[field] = cleanText;
           renderHeirManageList();
         }
@@ -1830,6 +1871,24 @@
       document.getElementById("render-dec-title").innerHTML = `<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('decedent','','title',this)"` : ''}>${escapeHtml(appState.decedent.title || "被繼承人")}</span>`;
       document.getElementById("render-dec-name").innerHTML = `<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('decedent','','name',this)"` : ''}>${escapeHtml(appState.decedent.name || "○○○")}</span>`;
 
+      const decNoteTrimmed = (appState.decedent.note || "").trim();
+      const decDeceasedEl = document.getElementById("render-dec-deceased");
+      if (decNoteTrimmed === "歿" || decNoteTrimmed === "(歿)" || decNoteTrimmed === "（歿）") {
+        decDeceasedEl.textContent = decNoteTrimmed;
+        decDeceasedEl.classList.remove("hidden");
+      } else {
+        decDeceasedEl.classList.add("hidden");
+      }
+
+      // 被繼承人身分證字號
+      const decIdRow = document.getElementById("render-dec-id-row");
+      if (appState.decedent.idNumber && appState.decedent.idNumber.trim()) {
+        decIdRow.innerHTML = `身分證字號：<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('decedent','','idNumber',this)"` : ''}>${escapeHtml(appState.decedent.idNumber.trim())}</span>`;
+        decIdRow.classList.remove("hidden");
+      } else {
+        decIdRow.classList.add("hidden");
+      }
+
       // 被繼承人出生日期
       const decBirthRow = document.getElementById("render-dec-birth-row");
       const decBirthFormatted = formatDateObj(appState.decedent.birth);
@@ -1850,7 +1909,7 @@
 
       // 被繼承人備註
       const decNoteRow = document.getElementById("render-dec-note-row");
-      if (appState.decedent.note && appState.decedent.note.trim()) {
+      if (decNoteTrimmed && decNoteTrimmed !== "歿" && decNoteTrimmed !== "(歿)" && decNoteTrimmed !== "（歿）") {
         decNoteRow.innerHTML = `<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('decedent','','note',this)"` : ''}>${escapeHtml(appState.decedent.note)}</span>`;
         decNoteRow.classList.remove("hidden");
       } else {
@@ -1864,6 +1923,7 @@
         sp.id = safeId;
         const spBirth = formatDateObj(sp.birth);
         const spDeath = formatDateObj(sp.death);
+        const decInfo = getInlineDeceasedInfo(spDeath, sp.note);
         const isSel = selectedNodeId === safeId;
         return `
           <div onclick="selectSpouseForEdit('${safeId}', event)"
@@ -1871,12 +1931,14 @@
             <div class="text-xl font-bold tracking-wide leading-snug" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','title',this)"` : ''}>
               ${escapeHtml(sp.title || "配偶")}
             </div>
-            <div class="text-xl font-bold tracking-wide mt-1" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','name',this)"` : ''}>
-              ${escapeHtml(sp.name || "○○○")}
+            <div class="text-xl font-bold tracking-wide mt-1 flex items-baseline gap-1.5">
+              <span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','name',this)"` : ''}>${escapeHtml(sp.name || "○○○")}</span>
+              ${decInfo.tag ? `<span class="text-base font-bold text-gray-800">${escapeHtml(decInfo.tag)}</span>` : ''}
             </div>
+            ${sp.idNumber ? `<div class="text-xs mt-1 text-gray-800 font-mono">身分證字號：<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','idNumber',this)"` : ''}>${escapeHtml(sp.idNumber)}</span></div>` : ''}
             ${spBirth ? `<div class="text-sm mt-1 text-gray-800">出生日期：${escapeHtml(spBirth)}</div>` : ''}
             ${spDeath ? `<div class="text-sm mt-0.5 text-gray-800">死亡日期：${escapeHtml(spDeath)}</div>` : ''}
-            ${sp.note ? `<div class="text-xs mt-0.5 text-gray-600" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','note',this)"` : ''}>${escapeHtml(sp.note)}</div>` : ''}
+            ${sp.note && !decInfo.hideNote ? `<div class="text-xs mt-0.5 text-gray-600" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','note',this)"` : ''}>${escapeHtml(sp.note)}</div>` : ''}
           </div>
         `;
       }).join("");
@@ -1911,6 +1973,7 @@
         const hasChildren = subTreeHtml !== "";
         const bStr = appState.config.showBirthForAll ? formatDateObj(child.birth) : "";
         const dStr = formatDateObj(child.death);
+        const decInfo = getInlineDeceasedInfo(dStr, child.note);
         const isSel = selectedNodeId === safeId;
 
         return `
@@ -1934,18 +1997,20 @@
                   <button type="button" onclick="deleteHeir('${safeId}', event)" class="hover:text-red-300" title="刪除">✕</button>
                 </div>
 
-                <!-- 稱謂 + 姓名 主列（左側與右側設有線條錨點） -->
+                <!-- 稱謂 + 姓名 + 歿 主列（左側與右側設有線條錨點） -->
                 <div class="flex items-center text-xl font-bold tracking-wide leading-snug whitespace-nowrap">
                   <span id="anchor-left-${safeId}" class="inline-block w-0 h-0 mr-1"></span>
                   <span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','title',this)"` : ''}>${escapeHtml(child.title)}</span>
                   <span class="ml-2" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','name',this)"` : ''}>${escapeHtml(child.name)}</span>
+                  ${decInfo.tag ? `<span class="ml-1.5 text-base font-bold text-gray-800">${escapeHtml(decInfo.tag)}</span>` : ''}
                   <span id="anchor-right-${safeId}" class="inline-block w-0 h-0 ml-2"></span>
                 </div>
 
-                <!-- 出生與死亡日期、備註 -->
+                <!-- 身分證字號、出生與死亡日期、備註 -->
+                ${child.idNumber ? `<div class="text-xs mt-1 text-gray-800 whitespace-nowrap font-mono">身分證字號：<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','idNumber',this)"` : ''}>${escapeHtml(child.idNumber)}</span></div>` : ''}
                 ${bStr ? `<div class="text-xs mt-1 text-gray-800 whitespace-nowrap">出生：${escapeHtml(bStr)}</div>` : ''}
                 ${dStr ? `<div class="text-xs mt-0.5 text-gray-800 whitespace-nowrap">死亡：${escapeHtml(dStr)}</div>` : ''}
-                ${child.note ? `<div class="text-xs mt-0.5 text-gray-600 whitespace-nowrap" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','note',this)"` : ''}>${escapeHtml(child.note)}</div>` : ''}
+                ${child.note && !decInfo.hideNote ? `<div class="text-xs mt-0.5 text-gray-600 whitespace-nowrap" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','note',this)"` : ''}>${escapeHtml(child.note)}</div>` : ''}
               </div>
 
               <!-- 若勾選下方顯示「⋮」省略號（如手繪附圖中參子下方、長子之次子下方） -->
@@ -2106,44 +2171,46 @@
 
     // 資安防護：消毒匯入的 JSON 結構，過濾非法屬性與不安全 ID
     function sanitizeDateField(d) {
-      if (!d || typeof d !== "object") return { era: "民國", year: "", month: "", day: "" };
+      if (!d || typeof d !== "object") return { y: "", m: "", d: "" };
       return {
-        era: ["民國", "民前", "西元"].includes(String(d.era)) ? String(d.era) : "民國",
-        year: String(d.year ?? "").slice(0, 10),
-        month: String(d.month ?? "").slice(0, 10),
-        day: String(d.day ?? "").slice(0, 10)
+        y: String(d.y ?? d.year ?? "").slice(0, 10),
+        m: String(d.m ?? d.month ?? "").slice(0, 10),
+        d: String(d.d ?? d.day ?? "").slice(0, 10)
       };
     }
 
     function sanitizeImportedState(raw) {
-      const safeSpouses = Array.isArray(raw.decedent?.spouses)
-        ? raw.decedent.spouses.map((sp, i) => ({
-            id: sanitizeId(sp?.id || `sp_${i + 1}`),
-            title: String(sp?.title ?? "配").slice(0, 30),
-            name: String(sp?.name ?? "").slice(0, 60),
-            birth: sanitizeDateField(sp?.birth),
-            death: sanitizeDateField(sp?.death),
-            note: String(sp?.note ?? "").slice(0, 120)
-          }))
-        : [];
+      const rawSpouses = Array.isArray(raw.spouses)
+        ? raw.spouses
+        : (Array.isArray(raw.decedent?.spouses) ? raw.decedent.spouses : []);
+
+      const safeSpouses = rawSpouses.map((sp, i) => ({
+        id: sanitizeId(sp?.id || `sp_${i + 1}`, "sp"),
+        title: String(sp?.title ?? "配偶").slice(0, 30),
+        name: String(sp?.name ?? "").slice(0, 60),
+        idNumber: String(sp?.idNumber ?? "").slice(0, 30),
+        birth: sanitizeDateField(sp?.birth),
+        death: sanitizeDateField(sp?.death),
+        note: String(sp?.note ?? "").slice(0, 120)
+      }));
 
       const idMap = new Map();
       idMap.set("root", "root");
       const rawHeirs = Array.isArray(raw.heirs) ? raw.heirs : [];
       rawHeirs.forEach((h, i) => {
         const oldId = String(h?.id ?? `h_${i + 1}`);
-        idMap.set(oldId, sanitizeId(oldId));
+        idMap.set(oldId, sanitizeId(oldId, "h"));
       });
 
       const safeHeirs = rawHeirs.map((h, i) => {
         const oldId = String(h?.id ?? `h_${i + 1}`);
         const rawParent = String(h?.parentId ?? "root");
         return {
-          id: idMap.get(oldId) || sanitizeId(`h_${i + 1}`),
+          id: idMap.get(oldId) || sanitizeId(`h_${i + 1}`, "h"),
           parentId: idMap.get(rawParent) || "root",
-          order: Number.isFinite(Number(h?.order)) ? Number(h.order) : i + 1,
           title: String(h?.title ?? "").slice(0, 40),
           name: String(h?.name ?? "").slice(0, 60),
+          idNumber: String(h?.idNumber ?? "").slice(0, 30),
           birth: sanitizeDateField(h?.birth),
           death: sanitizeDateField(h?.death),
           note: String(h?.note ?? "").slice(0, 120),
@@ -2153,20 +2220,28 @@
 
       return {
         config: {
-          title: String(raw.config?.title ?? "繼承系統表").slice(0, 100),
-          fontClass: ["font-kai", "font-serif-tc", "font-sans-tc"].includes(raw.config?.fontClass)
-            ? raw.config.fontClass
+          chartTitle: String(raw.config?.chartTitle ?? raw.config?.title ?? "").slice(0, 100),
+          fontFamily: ["font-kai", "font-serif-tc", "font-sans-tc"].includes(raw.config?.fontFamily || raw.config?.fontClass)
+            ? (raw.config.fontFamily || raw.config.fontClass)
             : "font-kai",
-          showBirthForAll: Boolean(raw.config?.showBirthForAll),
+          dateFormat: ["roc_full", "roc_short"].includes(raw.config?.dateFormat)
+            ? raw.config.dateFormat
+            : "roc_full",
+          showEmptyDates: raw.config?.showEmptyDates !== undefined ? Boolean(raw.config.showEmptyDates) : true,
+          showBirthForAll: raw.config?.showBirthForAll !== undefined ? Boolean(raw.config.showBirthForAll) : true,
           directTextEdit: Boolean(raw.config?.directTextEdit),
-          footerNote: String(raw.config?.footerNote ?? "").slice(0, 1000)
+          showLegalFooter: Boolean(raw.config?.showLegalFooter),
+          legalText: String(raw.config?.legalText ?? raw.config?.footerNote ?? "").slice(0, 1000)
         },
         decedent: {
+          title: String(raw.decedent?.title ?? "被繼承人").slice(0, 30),
           name: String(raw.decedent?.name ?? "").slice(0, 60),
+          idNumber: String(raw.decedent?.idNumber ?? "").slice(0, 30),
           birth: sanitizeDateField(raw.decedent?.birth),
           death: sanitizeDateField(raw.decedent?.death),
-          spouses: safeSpouses
+          note: String(raw.decedent?.note ?? "").slice(0, 120)
         },
+        spouses: safeSpouses,
         heirs: safeHeirs
       };
     }
@@ -2357,17 +2432,23 @@
 </worksheet>`;
     }
 
-    function formatPersonBlockText(title, name, birthObj, deathObj, note, includeBirth) {
+    function getChildrenOf(parentId) {
+      return appState.heirs.filter((h) => h.parentId === parentId);
+    }
+
+    function formatPersonBlockText(title, name, idNumber, birthObj, deathObj, note, includeBirth) {
       const lines = [];
-      const head = `${title ? title + " " : ""}${name || ""}`.trim();
+      const dStr = formatDateObj(deathObj);
+      const decInfo = getInlineDeceasedInfo(dStr, note);
+      const head = `${title ? title + " " : ""}${name || ""}${decInfo.tag ? " " + decInfo.tag : ""}`.trim();
       if (head) lines.push(head);
+      if (idNumber && idNumber.trim()) lines.push(`身分證字號：${idNumber.trim()}`);
       if (includeBirth) {
         const bStr = formatDateObj(birthObj);
         if (bStr) lines.push(`出生：${bStr}`);
       }
-      const dStr = formatDateObj(deathObj);
       if (dStr) lines.push(`死亡：${dStr}`);
-      if (note) lines.push(note);
+      if (note && !decInfo.hideNote) lines.push(note);
       return lines.join("\n");
     }
 
@@ -2406,6 +2487,7 @@
           const text = formatPersonBlockText(
             child.title,
             child.name,
+            child.idNumber,
             child.birth,
             child.death,
             child.note,
@@ -2468,7 +2550,7 @@
       const totalColsSheet1 = Math.max(5, 1 + maxGenDepth * 2);
       const colWidthsSheet1 = [30];
       for (let g = 1; g <= maxGenDepth; g++) {
-        colWidthsSheet1.push(7, 26);
+        colWidthsSheet1.push(7, 28);
       }
       while (colWidthsSheet1.length < totalColsSheet1) colWidthsSheet1.push(18);
 
@@ -2476,7 +2558,7 @@
       const sheet1Merges = [];
 
       // 第 1 列：表頭大標題
-      const titleText = appState.config.title || `${dec.name || ""} 繼承系統表`;
+      const titleText = (appState.config.chartTitle || "").trim() || `${dec.name || ""} 繼承系統表`;
       sheet1Rows.push({
         height: 36,
         cells: [{ v: titleText, s: 1 }]
@@ -2503,18 +2585,22 @@
 
       // 準備左側被繼承人與配偶區塊列
       const decLeftItems = [];
-      const decLines = [`被繼承人：${dec.name || ""}`];
+      const decNoteTrimmed = (dec.note || "").trim();
+      const decInline = (decNoteTrimmed === "歿" || decNoteTrimmed === "(歿)" || decNoteTrimmed === "（歿）") ? ` ${decNoteTrimmed}` : "";
+      const decLines = [`${dec.title || "被繼承人"}：${dec.name || ""}${decInline}`];
+      if (dec.idNumber && dec.idNumber.trim()) decLines.push(`身分證字號：${dec.idNumber.trim()}`);
       const decBirthStr = formatDateObj(dec.birth);
       const decDeathStr = formatDateObj(dec.death);
       if (decBirthStr) decLines.push(`出生日期：${decBirthStr}`);
       decLines.push(`死亡日期：${decDeathStr || "（未填）"}`);
+      if (decNoteTrimmed && !decInline) decLines.push(decNoteTrimmed);
       decLeftItems.push({
         text: decLines.join("\n"),
         lineCount: decLines.length
       });
 
-      (dec.spouses || []).forEach((sp) => {
-        const spText = formatPersonBlockText(sp.title, sp.name, sp.birth, sp.death, sp.note, showBirth);
+      (appState.spouses || []).forEach((sp) => {
+        const spText = formatPersonBlockText(sp.title, sp.name, sp.idNumber, sp.birth, sp.death, sp.note, showBirth);
         decLeftItems.push({
           text: spText,
           lineCount: spText.split("\n").length
@@ -2562,12 +2648,12 @@
 
       // 空一列後加入頁尾切結文字
       sheet1Rows.push({ height: 14, cells: [] });
-      if (appState.config.footerNote) {
-        const footerLines = appState.config.footerNote.split("\n").length;
+      if (appState.config.showLegalFooter && appState.config.legalText) {
+        const footerLines = appState.config.legalText.split("\n").length;
         const footerRowIdx = sheet1Rows.length + 1;
         sheet1Rows.push({
           height: Math.max(28, footerLines * 18 + 8),
-          cells: [{ v: appState.config.footerNote, s: 6 }]
+          cells: [{ v: appState.config.legalText, s: 6 }]
         });
         sheet1Merges.push(`A${footerRowIdx}:${excelColName(totalColsSheet1)}${footerRowIdx}`);
       }
@@ -2575,7 +2661,7 @@
       // =====================================================
       // 建立工作表 2：繼承人明細清單（結構化表格）
       // =====================================================
-      const colWidthsSheet2 = [10, 16, 18, 16, 18, 24, 24, 26];
+      const colWidthsSheet2 = [10, 16, 16, 16, 18, 20, 22, 22, 26];
       const sheet2Rows = [];
       const sheet2Merges = [];
 
@@ -2583,7 +2669,7 @@
         height: 32,
         cells: [{ v: `${dec.name || ""} 繼承系統表 — 親屬與繼承人明細清單`, s: 1 }]
       });
-      sheet2Merges.push("A1:H1");
+      sheet2Merges.push("A1:I1");
 
       sheet2Rows.push({
         height: 26,
@@ -2592,6 +2678,7 @@
           { v: "身分別／世代", s: 2 },
           { v: "稱謂", s: 2 },
           { v: "姓名", s: 2 },
+          { v: "身分證字號", s: 2 },
           { v: "上層親屬（父母）", s: 2 },
           { v: "出生日期", s: 2 },
           { v: "死亡日期", s: 2 },
@@ -2606,24 +2693,26 @@
         cells: [
           { v: String(seq++), s: 5 },
           { v: "被繼承人", s: 7 },
-          { v: "被繼承人", s: 7 },
+          { v: dec.title || "被繼承人", s: 7 },
           { v: dec.name || "", s: 7 },
+          { v: dec.idNumber || "—", s: 7 },
           { v: "—", s: 5 },
           { v: formatDateObj(dec.birth) || "—", s: 7 },
           { v: formatDateObj(dec.death) || "—", s: 7 },
-          { v: "被繼承人本人", s: 7 }
+          { v: dec.note || "被繼承人本人", s: 7 }
         ]
       });
 
       // 2. 配偶
-      (dec.spouses || []).forEach((sp) => {
+      (appState.spouses || []).forEach((sp) => {
         sheet2Rows.push({
           height: 24,
           cells: [
             { v: String(seq++), s: 5 },
             { v: "被繼承人配偶", s: 7 },
-            { v: sp.title || "配", s: 7 },
+            { v: sp.title || "配偶", s: 7 },
             { v: sp.name || "", s: 7 },
+            { v: sp.idNumber || "—", s: 7 },
             { v: `被繼承人 ${dec.name || ""} 之配偶`, s: 7 },
             { v: formatDateObj(sp.birth) || "—", s: 7 },
             { v: formatDateObj(sp.death) || "—", s: 7 },
@@ -2643,6 +2732,7 @@
               { v: `第 ${depth} 代直系血親`, s: 7 },
               { v: h.title || "", s: 7 },
               { v: h.name || "", s: 7 },
+              { v: h.idNumber || "—", s: 7 },
               { v: parentLabel, s: 7 },
               { v: formatDateObj(h.birth) || "—", s: 7 },
               { v: formatDateObj(h.death) || "—", s: 7 },
@@ -2951,18 +3041,24 @@
       }
       appState = {
         config: {
-          title: "繼承系統表",
-          fontClass: "font-kai",
-          showBirthForAll: false,
+          chartTitle: "",
+          fontFamily: "font-kai",
+          dateFormat: "roc_full",
+          showEmptyDates: true,
+          showBirthForAll: true,
           directTextEdit: false,
-          footerNote: "本系統表係依民法相關規定編製，如有遺漏或錯誤，由申請人負法律責任。"
+          showLegalFooter: false,
+          legalText: "以上繼承系統表係依民法第1138條至第1140條規定編製，如有遺漏或錯誤致他人受損害者，申請人願負法律責任，並保證與戶籍謄本記載相符。\n中 華 民 國 　　　 年 　　 月 　　 日　　立表人（繼承人）：　　　　　　（簽章）"
         },
         decedent: {
+          title: "被繼承人",
           name: "",
-          birth: { era: "民國", year: "", month: "", day: "" },
-          death: { era: "民國", year: "", month: "", day: "" },
-          spouses: []
+          idNumber: "",
+          birth: { y: "", m: "", d: "" },
+          death: { y: "", m: "", d: "" },
+          note: ""
         },
+        spouses: [],
         heirs: []
       };
       selectedNodeId = null;
