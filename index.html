@@ -630,6 +630,40 @@
       border-color: var(--border, #cbd5e1);
     }
     .ribbon-btn-sm svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* 桌面版鎖定視窗高度，確保右側預覽區下方水平捲軸（橫 bar）永遠固定在畫面最底部 */
+    @media (min-width: 1024px) {
+      html, body {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+      }
+      body > header {
+        flex-shrink: 0;
+      }
+      body > main {
+        flex: 1 1 0%;
+        min-height: 0;
+        overflow: hidden;
+      }
+      body > main > aside {
+        height: 100%;
+        max-height: 100%;
+        min-height: 0;
+        overflow-y: auto;
+      }
+      body > main > section {
+        height: 100%;
+        max-height: 100%;
+        min-height: 0;
+        overflow: hidden;
+      }
+      #preview-scroll-container {
+        flex: 1 1 0%;
+        min-height: 0;
+        overflow: auto;
+      }
+    }
   </style>
 </head>
 <body class="bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] antialiased m-0 p-0 min-h-screen lg:h-screen lg:overflow-hidden flex flex-col">
