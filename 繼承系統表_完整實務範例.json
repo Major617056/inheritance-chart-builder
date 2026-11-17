@@ -1,0 +1,146 @@
+{
+  "config": {
+    "chartTitle": "繼 承 系 統 表",
+    "fontFamily": "font-kai",
+    "dateFormat": "roc_full",
+    "showEmptyDates": false,
+    "showBirthForAll": true,
+    "directTextEdit": false
+  },
+  "decedent": {
+    "title": "被繼承人",
+    "name": "陳萬福",
+    "idNumber": "A102345678",
+    "address": "臺北市大安區忠孝東路四段100號",
+    "birth": { "y": "22", "m": "04", "d": "12" },
+    "death": { "y": "115", "m": "10", "d": "08" },
+    "note": "歿"
+  },
+  "spouses": [
+    {
+      "id": "sp-1",
+      "title": "配偶",
+      "name": "林秀琴",
+      "idNumber": "A203456789",
+      "address": "臺北市大安區忠孝東路四段100號",
+      "birth": { "y": "26", "m": "09", "d": "20" },
+      "death": { "y": "", "m": "", "d": "" },
+      "note": "存（繼承人）"
+    }
+  ],
+  "heirs": [
+    {
+      "id": "h-son-1",
+      "parentId": "root",
+      "title": "長子",
+      "name": "陳建宏",
+      "idNumber": "A123456781",
+      "address": "臺北市信義區松仁路50號",
+      "birth": { "y": "48", "m": "02", "d": "15" },
+      "death": { "y": "110", "m": "06", "d": "03" },
+      "note": "先歿（由子代位繼承）",
+      "dotsAfter": false,
+      "spouses": [
+        {
+          "id": "hsp-1",
+          "title": "長媳",
+          "name": "張美玲",
+          "idNumber": "F223456782",
+          "address": "臺北市信義區松仁路50號",
+          "birth": { "y": "50", "m": "01", "d": "18" },
+          "death": { "y": "", "m": "", "d": "" },
+          "note": "存"
+        }
+      ]
+    },
+    {
+      "id": "h-son-2",
+      "parentId": "root",
+      "title": "次子",
+      "name": "陳建志",
+      "idNumber": "A124567892",
+      "address": "新北市板橋區文化路一段200號",
+      "birth": { "y": "50", "m": "11", "d": "28" },
+      "death": { "y": "113", "m": "04", "d": "12" },
+      "note": "歿",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-son-3",
+      "parentId": "root",
+      "title": "參子",
+      "name": "陳建銘",
+      "idNumber": "A125678903",
+      "address": "臺中市西屯區臺灣大道三段300號",
+      "birth": { "y": "53", "m": "07", "d": "09" },
+      "death": { "y": "", "m": "", "d": "" },
+      "note": "存",
+      "dotsAfter": false,
+      "spouses": [
+        {
+          "id": "hsp-2",
+          "title": "配偶",
+          "name": "王雅婷",
+          "idNumber": "B225678904",
+          "address": "臺中市西屯區臺灣大道三段300號",
+          "birth": { "y": "56", "m": "06", "d": "25" },
+          "death": { "y": "", "m": "", "d": "" },
+          "note": "存"
+        }
+      ]
+    },
+    {
+      "id": "h-dau-1",
+      "parentId": "root",
+      "title": "長女",
+      "name": "陳淑芬",
+      "idNumber": "A226789014",
+      "address": "高雄市左營區博愛二路88號",
+      "birth": { "y": "55", "m": "03", "d": "19" },
+      "death": { "y": "", "m": "", "d": "" },
+      "note": "拋棄繼承",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-dau-2",
+      "parentId": "root",
+      "title": "次女",
+      "name": "陳淑惠",
+      "idNumber": "A227890125",
+      "address": "桃園市中壢區中央西路120號",
+      "birth": { "y": "58", "m": "12", "d": "05" },
+      "death": { "y": "", "m": "", "d": "" },
+      "note": "存",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-grandson-1",
+      "parentId": "h-son-1",
+      "title": "長子",
+      "name": "陳冠宇",
+      "idNumber": "A128901236",
+      "address": "臺北市信義區松仁路50號",
+      "birth": { "y": "78", "m": "05", "d": "10" },
+      "death": { "y": "", "m": "", "d": "" },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-grandson-2",
+      "parentId": "h-son-1",
+      "title": "次子",
+      "name": "陳冠廷",
+      "idNumber": "A129012347",
+      "address": "臺北市信義區松仁路50號",
+      "birth": { "y": "81", "m": "08", "d": "22" },
+      "death": { "y": "", "m": "", "d": "" },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    }
+  ]
+}
