@@ -391,21 +391,55 @@
       transform-origin: top left;
     }
 
-    /* 節點互動高亮 */
+    /* 流程心智圖節點卡片與互動高亮 */
     .chart-person-box {
       position: relative;
-      border-radius: 6px;
-      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+      border-radius: 10px;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
       cursor: pointer;
       user-select: none;
     }
+    .chart-card-decedent {
+      background-color: #f8fafc;
+      border: 1.5px solid #475569;
+      border-left: 5px solid #1e3a8a;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.07);
+      padding: 12px 16px;
+    }
+    .chart-card-spouse {
+      background-color: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-left: 4px solid #64748b;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+      padding: 10px 14px;
+    }
+    .chart-card-heir {
+      background-color: #ffffff;
+      border: 1.5px solid #94a3b8;
+      border-left: 4px solid #2563eb;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+      padding: 10px 16px;
+    }
+    .chart-gen-1 { border-left-color: #2563eb; }
+    .chart-gen-2 { border-left-color: #0d9488; }
+    .chart-gen-3 { border-left-color: #7c3aed; }
+    .chart-card-deceased {
+      background-color: #f8fafc;
+      border-color: #cbd5e1;
+    }
+    .chart-subspouse-box {
+      background-color: #f8fafc;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-top: 8px;
+      border-left: 3px solid #94a3b8;
+    }
     .chart-person-box:hover {
-      background-color: rgba(37, 99, 235, 0.06);
-      box-shadow: 0 0 0 1.5px rgba(37, 99, 235, 0.45);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.16), 0 0 0 1.5px rgba(37, 99, 235, 0.5);
     }
     .chart-person-box.active-selected {
-      background-color: rgba(37, 99, 235, 0.1);
-      box-shadow: 0 0 0 2px #2563eb;
+      background-color: rgba(239, 246, 255, 0.9);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2), 0 0 0 2px #2563eb;
     }
     .chart-person-box .quick-action-bar {
       opacity: 0;
@@ -461,7 +495,6 @@
       }
       .chart-person-box {
         box-shadow: none !important;
-        background: transparent !important;
       }
       [contenteditable="true"] {
         outline: none !important;
@@ -919,18 +952,6 @@
                 <input id="cfg-direct-text-edit" type="checkbox" onchange="toggleDirectTextEdit()" class="accent-[var(--primary,#2563eb)]" />
                 <span class="font-semibold text-[var(--primary,#2563eb)]">開啟「圖表文字直接打字微調模式」（直接在右圖點字修改並自動同步保存）</span>
               </label>
-
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input id="cfg-show-legal-footer" type="checkbox" onchange="updateConfigFromForm()" class="accent-[var(--primary,#2563eb)]" />
-                <span>底部顯示台灣繼承登記／國稅局申報法條切結語與簽章欄</span>
-              </label>
-            </div>
-
-            <div id="cfg-legal-text-wrap" class="hidden space-y-1 pt-1">
-              <label class="block text-[var(--muted-foreground,#475569)] font-medium">底部切結語內容（可自行修改）</label>
-              <textarea id="cfg-legal-text" rows="3" oninput="updateConfigFromForm()"
-                class="w-full p-2 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] text-xs">以上繼承系統表係依民法第1138條至第1140條規定編製，如有遺漏或錯誤致他人受損害者，申請人願負法律責任，並保證與戶籍謄本記載相符。
-中 華 民 國 　　　 年 　　 月 　　 日　　立表人（繼承人）：　　　　　　（簽章）</textarea>
             </div>
           </div>
         </section>
@@ -987,11 +1008,10 @@
             <div id="chart-left-column" class="flex flex-col justify-start pr-16 relative z-10" style="min-width: 230px;">
               <!-- 被繼承人區塊 -->
               <div id="node-decedent" onclick="selectDecedentForEdit(event)"
-                class="chart-person-box p-2.5 mb-8">
+                class="chart-person-box chart-card-decedent mb-6">
                 <div class="text-xl font-bold tracking-wide leading-snug flex items-baseline gap-2">
                   <span id="render-dec-title">被繼承人</span>
-                  <span id="render-dec-name">○○○</span>
-                  <span id="render-dec-deceased" class="text-base font-bold text-gray-800 hidden"></span>
+                  <span><span id="render-dec-name">○○○</span><span id="render-dec-deceased" class="text-base font-bold text-gray-800 hidden"></span></span>
                 </div>
                 <div id="render-dec-id-row" class="text-xs mt-1 pl-4 text-gray-800 font-mono hidden"></div>
                 <div id="render-dec-address-row" class="text-xs mt-0.5 pl-4 text-gray-800 hidden"></div>
@@ -1011,9 +1031,6 @@
             <!-- 右側：第一代及後續各代繼承人遞迴樹區 -->
             <div id="chart-heirs-root" class="relative z-10 flex items-start"></div>
           </div>
-
-          <!-- 選填底部法律切結與簽章欄 -->
-          <div id="chart-legal-footer" class="mt-12 pt-4 border-t border-gray-400 text-sm leading-relaxed whitespace-pre-line hidden"></div>
         </div>
       </div>
     </section>
@@ -1031,9 +1048,7 @@
         dateFormat: "roc_full",
         showEmptyDates: true,
         showBirthForAll: true,
-        directTextEdit: false,
-        showLegalFooter: false,
-        legalText: "以上繼承系統表係依民法第1138條至第1140條規定編製，如有遺漏或錯誤致他人受損害者，申請人願負法律責任，並保證與戶籍謄本記載相符。\n中 華 民 國 　　　 年 　　 月 　　 日　　立表人（繼承人）：　　　　　　（簽章）"
+        directTextEdit: false
       },
       decedent: {
         title: "被繼承人",
@@ -1082,9 +1097,7 @@
           dateFormat: "roc_full",
           showEmptyDates: true,
           showBirthForAll: true,
-          directTextEdit: false,
-          showLegalFooter: false,
-          legalText: appState.config.legalText
+          directTextEdit: false
         },
         decedent: {
           title: "被繼承人",
@@ -1189,9 +1202,7 @@
           dateFormat: "roc_full",
           showEmptyDates: false,
           showBirthForAll: true,
-          directTextEdit: false,
-          showLegalFooter: true,
-          legalText: appState.config.legalText
+          directTextEdit: false
         },
         decedent: {
           title: "被繼承人",
@@ -1458,10 +1469,6 @@
       document.getElementById("cfg-show-empty-dates").checked = Boolean(appState.config.showEmptyDates);
       document.getElementById("cfg-show-birth-for-all").checked = Boolean(appState.config.showBirthForAll);
       document.getElementById("cfg-direct-text-edit").checked = Boolean(appState.config.directTextEdit);
-      document.getElementById("cfg-show-legal-footer").checked = Boolean(appState.config.showLegalFooter);
-      document.getElementById("cfg-legal-text").value = appState.config.legalText || "";
-      document.getElementById("cfg-legal-text-wrap").classList.toggle("hidden", !appState.config.showLegalFooter);
-
       renderSpouseEditorList();
       refreshParentDropdown();
       renderHeirManageList();
@@ -1484,9 +1491,6 @@
       appState.config.dateFormat = document.getElementById("cfg-date-format").value;
       appState.config.showEmptyDates = document.getElementById("cfg-show-empty-dates").checked;
       appState.config.showBirthForAll = document.getElementById("cfg-show-birth-for-all").checked;
-      appState.config.showLegalFooter = document.getElementById("cfg-show-legal-footer").checked;
-      appState.config.legalText = document.getElementById("cfg-legal-text").value;
-      document.getElementById("cfg-legal-text-wrap").classList.toggle("hidden", !appState.config.showLegalFooter);
       renderChart();
     }
 
@@ -2203,7 +2207,7 @@
         const isSel = selectedNodeId === safeId;
         return `
           <div onclick="selectSpouseForEdit('${safeId}', event)"
-            class="chart-person-box p-2.5 ${isSel ? 'active-selected' : ''}">
+            class="chart-person-box chart-card-spouse ${isSel ? 'active-selected' : ''}">
             <div class="text-xl font-bold tracking-wide leading-snug" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','title',this)"` : ''}>
               ${escapeHtml(sp.title || "配偶")}
             </div>
@@ -2222,30 +2226,21 @@
       // 4. 右側：遞迴建立繼承人樹狀結構
       const heirsRootEl = document.getElementById("chart-heirs-root");
       heirsRootEl.innerHTML = buildHeirSubtreeHtml("root", isDirect);
-
-      // 5. 底部切結語
-      const footerEl = document.getElementById("chart-legal-footer");
-      if (appState.config.showLegalFooter && appState.config.legalText.trim()) {
-        footerEl.textContent = appState.config.legalText;
-        footerEl.classList.remove("hidden");
-      } else {
-        footerEl.classList.add("hidden");
-      }
-
       // 6. 計算並繪製精準 SVG 傳統垂直幹線與水平分支線
       requestAnimationFrame(() => {
         drawTraditionalConnectorLines();
       });
     }
 
-    function buildHeirSubtreeHtml(parentId, isDirect) {
+    function buildHeirSubtreeHtml(parentId, isDirect, gen = 1) {
       const children = appState.heirs.filter((h) => h.parentId === parentId);
       if (children.length === 0) return "";
 
+      const genClass = `chart-gen-${Math.min(gen, 3)}`;
       const itemsHtml = children.map((child) => {
         const safeId = sanitizeId(child.id, "h");
         child.id = safeId;
-        const subTreeHtml = buildHeirSubtreeHtml(safeId, isDirect);
+        const subTreeHtml = buildHeirSubtreeHtml(safeId, isDirect, gen + 1);
         const hasChildren = subTreeHtml !== "";
         const bStr = appState.config.showBirthForAll ? formatDateObj(child.birth) : "";
         const dStr = formatDateObj(child.death);
@@ -2258,8 +2253,8 @@
             <div class="flex flex-col items-start pr-14">
               <div id="node-heir-${safeId}"
                 onclick="handleChartHeirClick('${safeId}', event)"
-                class="chart-person-box px-2.5 py-1.5 ${isSel ? 'active-selected' : ''}"
-                style="min-width: 145px;">
+                class="chart-person-box chart-card-heir ${genClass} ${decInfo.tag ? 'chart-card-deceased' : ''} ${isSel ? 'active-selected' : ''}"
+                style="min-width: 155px;">
 
                 <!-- 浮動快速操作列（滑鼠移過或選取時顯示，列印時自動隱藏） -->
                 <div class="quick-action-bar no-print absolute -top-6 left-1 z-30 flex items-center gap-1 bg-slate-800 text-white text-[11px] px-1.5 py-0.5 rounded shadow">
@@ -2275,10 +2270,10 @@
 
                 <!-- 稱謂 + 姓名 + 歿 主列（左側與右側設有線條錨點） -->
                 <div class="flex items-center text-xl font-bold tracking-wide leading-snug whitespace-nowrap">
-                  <span id="anchor-left-${safeId}" class="inline-block w-0 h-0 mr-1"></span>
+                  <span id="anchor-left-${safeId}" class="inline-block w-0 h-0"></span>
                   <span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','title',this)"` : ''}>${escapeHtml(child.title)}</span>
                   <span class="ml-2" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','name',this)"` : ''}>${escapeHtml(child.name)}</span>${decInfo.tag ? `<span class="text-base font-bold text-gray-800">${escapeHtml(decInfo.tag)}</span>` : ''}
-                  <span id="anchor-right-${safeId}" class="inline-block w-0 h-0 ml-2"></span>
+                  <span id="anchor-right-${safeId}" class="inline-block w-0 h-0"></span>
                 </div>
 
                 <!-- 身分證字號、戶籍地、出生與死亡日期、備註 -->
@@ -2288,13 +2283,13 @@
                 ${dStr ? `<div class="text-xs mt-0.5 text-gray-800 whitespace-nowrap">死亡：${escapeHtml(dStr)}</div>` : ''}
                 ${child.note && !decInfo.hideNote ? `<div class="text-xs mt-0.5 text-gray-600 whitespace-nowrap" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','note',this)"` : ''}>${escapeHtml(child.note)}</div>` : ''}
                 ${Array.isArray(child.spouses) && child.spouses.length > 0 ? `
-                  <div class="mt-1.5 pt-1 border-t border-gray-300 space-y-1">
+                  <div class="chart-subspouse-box space-y-1">
                     ${child.spouses.map((sp) => {
                       const spB = appState.config.showBirthForAll ? formatDateObj(sp.birth) : "";
                       const spD = formatDateObj(sp.death);
                       const spDec = getInlineDeceasedInfo(spD, sp.note);
                       return `
-                        <div class="pl-2 text-xs text-gray-800 whitespace-nowrap">
+                        <div class="text-xs text-gray-800 whitespace-nowrap">
                           <div class="font-bold text-sm flex items-baseline">
                             <span>${escapeHtml(sp.title || "配偶")}</span>
                             <span class="ml-1">${escapeHtml(sp.name || "○○○")}</span>${spDec.tag ? `<span class="text-xs font-bold">${escapeHtml(spDec.tag)}</span>` : ''}
@@ -2337,14 +2332,13 @@
     }
 
     // =========================================================================
-    // 繪製與手繪附圖完全一致的傳統直豎括號線（│ 與 ─）
+    // 繪製流程心智圖風格連接線（精準銜接卡片外緣 + 圓潤轉折點）
     // =========================================================================
     function drawTraditionalConnectorLines() {
       const stage = document.getElementById("chart-stage");
       const svg = document.getElementById("chart-lines-svg");
       if (!stage || !svg) return;
 
-      // 暫時重設縮放以取得精準未縮放之相對座標，或以倍率修正
       const stageRect = stage.getBoundingClientRect();
       const scale = currentZoom || 1;
 
@@ -2366,82 +2360,81 @@
       svg.setAttribute("viewBox", `0 0 ${stageW} ${stageH}`);
 
       const lines = [];
-      const strokeColor = "#1f2937";
+      const strokeColor = "#475569";
+      const dotColor = "#1e3a8a";
       const strokeWidth = 2;
 
-      // 找出所有世代的 children column (`data-spine-for`)
       const spineCols = stage.querySelectorAll("[data-spine-for]");
       spineCols.forEach((col) => {
         const parentKey = col.getAttribute("data-spine-for");
         const directRows = Array.from(col.children).filter((el) => el.classList.contains("heir-branch-row"));
         if (directRows.length === 0) return;
 
-        // 蒐集此欄所有直接子節點的左側錨點
         const childAnchors = [];
         directRows.forEach((row) => {
           const hId = row.getAttribute("data-heir-id");
+          const cardEl = document.getElementById(`node-heir-${hId}`);
           const leftAnchor = document.getElementById(`anchor-left-${hId}`);
-          if (leftAnchor) {
-            childAnchors.push({ id: hId, pos: relPos(leftAnchor), rowPos: relPos(row) });
+          if (cardEl) {
+            const cardPos = relPos(cardEl);
+            const anchorY = leftAnchor ? relPos(leftAnchor).midY : cardPos.midY;
+            childAnchors.push({ id: hId, leftX: cardPos.left, midY: anchorY, cardPos });
           }
         });
 
         if (childAnchors.length === 0) return;
 
-        // 垂直幹線 X 座標：設在第一個子節點文字左側往左 16px 處
-        const spineX = childAnchors[0].pos.left - 16;
-
-        // 垂直幹線的起點與終點：如同手繪附圖，上下略微延伸出頭（約 14px），並涵蓋最末節點（含省略號）
-        let topY = childAnchors[0].pos.midY - 14;
-        const lastRow = directRows[directRows.length - 1];
-        const lastRowRect = relPos(lastRow);
-        const lastAnchorY = childAnchors[childAnchors.length - 1].pos.midY;
-        let bottomY = Math.max(lastAnchorY + 22, lastRowRect.bottom - 4);
-
-        // 若為第一代 (root)，先確認被繼承人「死亡日期：」高度，確保垂直幹線必定涵蓋該水平連線高度（解決僅 1 名子女時對齊偏移問題）
-        let rootConnectY = null;
-        let rootLeftX = null;
+        // 決定母節點右側起點與 Y 座標
+        let parentRightX = null;
+        let parentConnectY = null;
         if (parentKey === "root") {
-          const decAnchor = document.getElementById("decedent-line-anchor");
-          if (decAnchor) {
-            const decPos = relPos(decAnchor);
-            rootConnectY = decPos.midY;
-            rootLeftX = decPos.left;
-            if (rootConnectY < topY + 6) topY = rootConnectY - 8;
-            if (rootConnectY > bottomY - 6) bottomY = rootConnectY + 8;
-          }
-        }
-
-        // 1. 畫垂直幹線 (│)
-        lines.push(`<line x1="${spineX}" y1="${topY}" x2="${spineX}" y2="${bottomY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
-
-        // 2. 畫每個子節點的短橫線刻度 (├─)，稍微穿過垂直線 4px 呈現手繪附圖的「┼─」質感
-        childAnchors.forEach((ca) => {
-          const y = ca.pos.midY;
-          const xStart = spineX - 4;
-          const xEnd = ca.pos.left - 4;
-          lines.push(`<line x1="${xStart}" y1="${y}" x2="${xEnd}" y2="${y}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
-        });
-
-        // 3. 畫從上層親屬連到這條垂直幹線的水平橫線 (────)
-        if (parentKey === "root") {
-          if (rootConnectY !== null && rootLeftX !== null) {
-            lines.push(`<line x1="${rootLeftX}" y1="${rootConnectY}" x2="${spineX}" y2="${rootConnectY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+          const decCard = document.getElementById("node-decedent");
+          const decDeathRow = document.getElementById("render-dec-death-row");
+          if (decCard) {
+            const decPos = relPos(decCard);
+            parentRightX = decPos.right;
+            parentConnectY = decDeathRow ? relPos(decDeathRow).midY : decPos.midY;
           }
         } else {
+          const parentCard = document.getElementById(`node-heir-${parentKey}`);
           const parentRightAnchor = document.getElementById(`anchor-right-${parentKey}`);
-          if (parentRightAnchor) {
-            const pPos = relPos(parentRightAnchor);
-            const connectY = pPos.midY;
-            // 若母節點 Y 比子幹線頂端高或低，自動延伸垂直幹線以完美銜接
-            if (connectY < topY) {
-              lines.push(`<line x1="${spineX}" y1="${connectY - 8}" x2="${spineX}" y2="${topY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
-            } else if (connectY > bottomY) {
-              lines.push(`<line x1="${spineX}" y1="${bottomY}" x2="${spineX}" y2="${connectY + 8}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
-            }
-            lines.push(`<line x1="${pPos.right + 4}" y1="${connectY}" x2="${spineX}" y2="${connectY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+          if (parentCard) {
+            const pCardPos = relPos(parentCard);
+            parentRightX = pCardPos.right;
+            parentConnectY = parentRightAnchor ? relPos(parentRightAnchor).midY : pCardPos.midY;
           }
         }
+
+        // 垂直幹線 X 座標：設在父節點右緣與子節點左緣之間（偏子節點左側 26px）
+        const minChildLeft = Math.min(...childAnchors.map((c) => c.leftX));
+        const spineX = parentRightX !== null ? Math.round((parentRightX + minChildLeft) / 2) : minChildLeft - 26;
+
+        const firstY = childAnchors[0].midY;
+        const lastY = childAnchors[childAnchors.length - 1].midY;
+        let topY = firstY;
+        let bottomY = lastY;
+        if (parentConnectY !== null) {
+          topY = Math.min(topY, parentConnectY);
+          bottomY = Math.max(bottomY, parentConnectY);
+        }
+
+        // 1. 畫垂直幹線（若有多個分支或上下延伸）
+        if (Math.abs(bottomY - topY) > 1) {
+          lines.push(`<line x1="${spineX}" y1="${topY}" x2="${spineX}" y2="${bottomY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+        }
+
+        // 2. 畫從母節點右緣連到垂直幹線的水平線 + 起點小圓點
+        if (parentRightX !== null && parentConnectY !== null) {
+          lines.push(`<line x1="${parentRightX}" y1="${parentConnectY}" x2="${spineX}" y2="${parentConnectY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+          lines.push(`<circle cx="${parentRightX}" cy="${parentConnectY}" r="3.5" fill="${dotColor}" />`);
+        }
+
+        // 3. 畫每個子節點從垂直幹線連到卡片左緣的水平線 + 終點小圓點
+        childAnchors.forEach((ca) => {
+          const y = ca.midY;
+          lines.push(`<line x1="${spineX}" y1="${y}" x2="${ca.leftX}" y2="${y}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />`);
+          lines.push(`<circle cx="${ca.leftX}" cy="${y}" r="3.5" fill="${dotColor}" />`);
+        });
       });
 
       svg.innerHTML = lines.join("");
@@ -2542,9 +2535,7 @@
             : "roc_full",
           showEmptyDates: raw.config?.showEmptyDates !== undefined ? Boolean(raw.config.showEmptyDates) : true,
           showBirthForAll: raw.config?.showBirthForAll !== undefined ? Boolean(raw.config.showBirthForAll) : true,
-          directTextEdit: Boolean(raw.config?.directTextEdit),
-          showLegalFooter: Boolean(raw.config?.showLegalFooter),
-          legalText: String(raw.config?.legalText ?? raw.config?.footerNote ?? "").slice(0, 1000)
+          directTextEdit: Boolean(raw.config?.directTextEdit)
         },
         decedent: {
           title: String(raw.decedent?.title ?? "被繼承人").slice(0, 30),
@@ -2850,15 +2841,6 @@
                 .join("")}</w:tr>`
           )
           .join("");
-
-        const legalParaXml =
-          appState.config.showLegalFooter && appState.config.legalText
-            ? appState.config.legalText
-                .split("\n")
-                .map((line) => buildWordParagraph(line, { sizeHalfPt: 20, spacingAfter: 60 }))
-                .join("")
-            : "";
-
         const drawingXml = `<w:p>
           <w:pPr><w:jc w:val="center"/><w:spacing w:after="160"/></w:pPr>
           <w:r>
@@ -2896,7 +2878,6 @@
   <w:body>
     ${buildWordParagraph(titleText, { bold: true, sizeHalfPt: 40, align: "center", spacingAfter: 200 })}
     ${drawingXml}
-    ${legalParaXml}
     <w:p><w:r><w:br w:type="page"/></w:r></w:p>
     ${buildWordParagraph("繼承人明細一覽表", { bold: true, sizeHalfPt: 30, align: "left", spacingAfter: 140 })}
     <w:tbl>
@@ -2998,27 +2979,55 @@
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, width, height);
 
-        // 2. 繪製可見邊框（例如子女配偶分隔線、切結語上分隔線）
-        sheet.querySelectorAll("*").forEach((el) => {
-          if (el === sheet || el.closest(".no-print") || el.closest(".quick-action-bar")) return;
+        // 2. 繪製節點卡片（圓角底色、外框與左側強調色條）與子配偶區塊
+        const drawRoundRectPath = (x, y, w, h, r) => {
+          const rad = Math.min(r, w / 2, h / 2);
+          ctx.beginPath();
+          ctx.moveTo(x + rad, y);
+          ctx.lineTo(x + w - rad, y);
+          ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+          ctx.lineTo(x + w, y + h - rad);
+          ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+          ctx.lineTo(x + rad, y + h);
+          ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+          ctx.lineTo(x, y + rad);
+          ctx.quadraticCurveTo(x, y, x + rad, y);
+          ctx.closePath();
+        };
+
+        sheet.querySelectorAll(".chart-person-box, .chart-subspouse-box").forEach((el) => {
+          if (el.closest(".no-print")) return;
           const cs = getComputedStyle(el);
           if (cs.display === "none" || cs.visibility === "hidden") return;
+          const r = el.getBoundingClientRect();
+          if (r.width <= 0 || r.height <= 0) return;
+
+          const x = r.left - sheetRect.left;
+          const y = r.top - sheetRect.top;
+          const rad = parseFloat(cs.borderTopLeftRadius) || 8;
+
+          ctx.save();
+          drawRoundRectPath(x, y, r.width, r.height, rad);
+          if (cs.backgroundColor && cs.backgroundColor !== "rgba(0, 0, 0, 0)" && cs.backgroundColor !== "transparent") {
+            ctx.fillStyle = cs.backgroundColor;
+            ctx.fill();
+          }
           const btw = parseFloat(cs.borderTopWidth) || 0;
           if (btw > 0 && cs.borderTopStyle !== "none") {
-            const r = el.getBoundingClientRect();
-            if (r.width > 0 && r.height >= 0) {
-              ctx.strokeStyle = cs.borderTopColor || "#d1d5db";
-              ctx.lineWidth = btw;
-              ctx.beginPath();
-              const y = r.top - sheetRect.top + btw / 2;
-              ctx.moveTo(r.left - sheetRect.left, y);
-              ctx.lineTo(r.right - sheetRect.left, y);
-              ctx.stroke();
-            }
+            ctx.strokeStyle = cs.borderTopColor || "#94a3b8";
+            ctx.lineWidth = btw;
+            ctx.stroke();
           }
+          ctx.clip();
+          const blw = parseFloat(cs.borderLeftWidth) || 0;
+          if (blw > 0 && cs.borderLeftStyle !== "none") {
+            ctx.fillStyle = cs.borderLeftColor || "#2563eb";
+            ctx.fillRect(x, y, blw, r.height);
+          }
+          ctx.restore();
         });
 
-        // 3. 繪製 SVG 連接線（橫線、垂直幹線與分支短橫線）
+        // 3. 繪製 SVG 連接線與轉折圓點
         const svg = document.getElementById("chart-lines-svg");
         if (svg) {
           const svgRect = svg.getBoundingClientRect();
@@ -3029,9 +3038,9 @@
             const y1 = parseFloat(ln.getAttribute("y1") || "0") + oy;
             const x2 = parseFloat(ln.getAttribute("x2") || "0") + ox;
             const y2 = parseFloat(ln.getAttribute("y2") || "0") + oy;
-            ctx.strokeStyle = ln.getAttribute("stroke") || "#111827";
-            ctx.lineWidth = parseFloat(ln.getAttribute("stroke-width") || "1.8");
-            ctx.lineCap = "square";
+            ctx.strokeStyle = ln.getAttribute("stroke") || "#475569";
+            ctx.lineWidth = parseFloat(ln.getAttribute("stroke-width") || "2");
+            ctx.lineCap = "round";
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
@@ -3042,10 +3051,19 @@
             if (!d) return;
             ctx.save();
             ctx.translate(ox, oy);
-            ctx.strokeStyle = p.getAttribute("stroke") || "#111827";
-            ctx.lineWidth = parseFloat(p.getAttribute("stroke-width") || "1.8");
+            ctx.strokeStyle = p.getAttribute("stroke") || "#475569";
+            ctx.lineWidth = parseFloat(p.getAttribute("stroke-width") || "2");
             ctx.stroke(new Path2D(d));
             ctx.restore();
+          });
+          svg.querySelectorAll("circle").forEach((c) => {
+            const cx = parseFloat(c.getAttribute("cx") || "0") + ox;
+            const cy = parseFloat(c.getAttribute("cy") || "0") + oy;
+            const cr = parseFloat(c.getAttribute("r") || "3.5");
+            ctx.fillStyle = c.getAttribute("fill") || "#1e3a8a";
+            ctx.beginPath();
+            ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+            ctx.fill();
           });
         }
 
@@ -3200,9 +3218,7 @@
           dateFormat: "roc_full",
           showEmptyDates: true,
           showBirthForAll: true,
-          directTextEdit: false,
-          showLegalFooter: false,
-          legalText: "以上繼承系統表係依民法第1138條至第1140條規定編製，如有遺漏或錯誤致他人受損害者，申請人願負法律責任，並保證與戶籍謄本記載相符。\n中 華 民 國 　　　 年 　　 月 　　 日　　立表人（繼承人）：　　　　　　（簽章）"
+          directTextEdit: false
         },
         decedent: {
           title: "被繼承人",
