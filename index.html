@@ -2022,7 +2022,7 @@
     function getInlineDeceasedInfo(deathFormatted, noteStr) {
       const trimmedNote = (noteStr || "").trim();
       if (trimmedNote === "歿" || trimmedNote === "(歿)" || trimmedNote === "（歿）") {
-        return { tag: trimmedNote, hideNote: true };
+        return { tag: "（歿）", hideNote: true };
       }
       if (deathFormatted && !trimmedNote.includes("歿")) {
         return { tag: "（歿）", hideNote: false };
@@ -2093,7 +2093,7 @@
       const decNoteTrimmed = (appState.decedent.note || "").trim();
       const decDeceasedEl = document.getElementById("render-dec-deceased");
       if (decNoteTrimmed === "歿" || decNoteTrimmed === "(歿)" || decNoteTrimmed === "（歿）") {
-        decDeceasedEl.textContent = decNoteTrimmed;
+        decDeceasedEl.textContent = "（歿）";
         decDeceasedEl.classList.remove("hidden");
       } else {
         decDeceasedEl.classList.add("hidden");
@@ -2159,9 +2159,8 @@
             <div class="text-xl font-bold tracking-wide leading-snug" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','title',this)"` : ''}>
               ${escapeHtml(sp.title || "配偶")}
             </div>
-            <div class="text-xl font-bold tracking-wide mt-1 flex items-baseline gap-1.5">
-              <span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','name',this)"` : ''}>${escapeHtml(sp.name || "○○○")}</span>
-              ${decInfo.tag ? `<span class="text-base font-bold text-gray-800">${escapeHtml(decInfo.tag)}</span>` : ''}
+            <div class="text-xl font-bold tracking-wide mt-1 flex items-baseline">
+              <span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','name',this)"` : ''}>${escapeHtml(sp.name || "○○○")}</span>${decInfo.tag ? `<span class="text-base font-bold text-gray-800">${escapeHtml(decInfo.tag)}</span>` : ''}
             </div>
             ${sp.idNumber ? `<div class="text-xs mt-1 text-gray-800 font-mono">身分證字號：<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','idNumber',this)"` : ''}>${escapeHtml(sp.idNumber)}</span></div>` : ''}
             ${sp.address ? `<div class="text-xs mt-0.5 text-gray-800">戶籍地：<span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('spouse','${safeId}','address',this)"` : ''}>${escapeHtml(sp.address)}</span></div>` : ''}
@@ -2230,8 +2229,7 @@
                 <div class="flex items-center text-xl font-bold tracking-wide leading-snug whitespace-nowrap">
                   <span id="anchor-left-${safeId}" class="inline-block w-0 h-0 mr-1"></span>
                   <span ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','title',this)"` : ''}>${escapeHtml(child.title)}</span>
-                  <span class="ml-2" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','name',this)"` : ''}>${escapeHtml(child.name)}</span>
-                  ${decInfo.tag ? `<span class="ml-1.5 text-base font-bold text-gray-800">${escapeHtml(decInfo.tag)}</span>` : ''}
+                  <span class="ml-2" ${isDirect ? `contenteditable="true" spellcheck="false" oninput="syncDirectEdit('heir','${safeId}','name',this)"` : ''}>${escapeHtml(child.name)}</span>${decInfo.tag ? `<span class="text-base font-bold text-gray-800">${escapeHtml(decInfo.tag)}</span>` : ''}
                   <span id="anchor-right-${safeId}" class="inline-block w-0 h-0 ml-2"></span>
                 </div>
 
@@ -2249,10 +2247,9 @@
                       const spDec = getInlineDeceasedInfo(spD, sp.note);
                       return `
                         <div class="pl-2 text-xs text-gray-800 whitespace-nowrap">
-                          <div class="font-bold text-sm flex items-baseline gap-1">
+                          <div class="font-bold text-sm flex items-baseline">
                             <span>${escapeHtml(sp.title || "配偶")}</span>
-                            <span>${escapeHtml(sp.name || "○○○")}</span>
-                            ${spDec.tag ? `<span class="text-xs font-bold">${escapeHtml(spDec.tag)}</span>` : ''}
+                            <span class="ml-1">${escapeHtml(sp.name || "○○○")}</span>${spDec.tag ? `<span class="text-xs font-bold">${escapeHtml(spDec.tag)}</span>` : ''}
                           </div>
                           ${sp.idNumber ? `<div class="font-mono">身分證字號：${escapeHtml(sp.idNumber)}</div>` : ''}
                           ${sp.address ? `<div>戶籍地：${escapeHtml(sp.address)}</div>` : ''}
@@ -2709,7 +2706,7 @@
       const lines = [];
       const dStr = formatDateObj(deathObj);
       const decInfo = getInlineDeceasedInfo(dStr, note);
-      const head = `${title ? title + " " : ""}${name || ""}${decInfo.tag ? " " + decInfo.tag : ""}`.trim();
+      const head = `${title ? title + " " : ""}${name || ""}${decInfo.tag || ""}`.trim();
       if (head) lines.push(head);
       if (idNumber && idNumber.trim()) lines.push(`身分證字號：${idNumber.trim()}`);
       if (address && address.trim()) lines.push(`戶籍地：${address.trim()}`);
