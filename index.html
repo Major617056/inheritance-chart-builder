@@ -3400,12 +3400,14 @@
 
       return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetPr><outlinePr summaryBelow="1" summaryRight="1"/><pageSetUpPr/></sheetPr>
   <dimension ref="${dimRef}"/>
-  <sheetViews><sheetView workbookViewId="0"/></sheetViews>
-  <sheetFormatPr defaultRowHeight="22"/>
+  <sheetViews><sheetView workbookViewId="0"><selection activeCell="A1" sqref="A1"/></sheetView></sheetViews>
+  <sheetFormatPr baseColWidth="8" defaultRowHeight="22"/>
   ${colsXml}
   <sheetData>${rowsXml}</sheetData>
   ${mergesXml}
+  <pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>
   <pageSetup orientation="landscape" paperSize="9"/>
 </worksheet>`;
     }
@@ -3418,6 +3420,7 @@
         // 樣式索引：0=一般, 1=標題, 2=表頭, 3=被繼承人卡片, 4=配偶卡片, 5=繼承人卡片
         const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <numFmts count="0"/>
   <fonts count="4">
     <font><sz val="11"/><name val="標楷體"/></font>
     <font><b/><sz val="16"/><name val="標楷體"/></font>
@@ -3425,7 +3428,7 @@
     <font><b/><sz val="11"/><color rgb="FF0F172A"/><name val="標楷體"/></font>
   </fonts>
   <fills count="6">
-    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill/></fill>
     <fill><patternFill patternType="gray125"/></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FF1E293B"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFFEF3C7"/></patternFill></fill>
@@ -3612,10 +3615,13 @@
         const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
   xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <workbookPr/>
+  <bookViews><workbookView visibility="visible" minimized="0" showHorizontalScroll="1" showVerticalScroll="1" showSheetTabs="1" tabRatio="600" firstSheet="0" activeTab="0"/></bookViews>
   <sheets>
-    <sheet name="繼承系統表" sheetId="1" r:id="rId1"/>
-    <sheet name="繼承人明細一覽表" sheetId="2" r:id="rId2"/>
+    <sheet name="繼承系統表" sheetId="1" state="visible" r:id="rId1"/>
+    <sheet name="繼承人明細一覽表" sheetId="2" state="visible" r:id="rId2"/>
   </sheets>
+  <calcPr calcId="124519" fullCalcOnLoad="1"/>
 </workbook>`;
 
         const workbookRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -3625,9 +3631,25 @@
   <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>`;
 
+        const nowIso = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+        const coreXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <dc:title>${escapeXml(titleText)}</dc:title>
+  <dc:creator>Inheritance Chart Builder</dc:creator>
+  <dcterms:created xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:created>
+  <dcterms:modified xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:modified>
+</cp:coreProperties>`;
+
+        const appXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">
+  <Application>Microsoft Excel</Application>
+</Properties>`;
+
         const rootRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
 </Relationships>`;
 
         const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -3635,14 +3657,18 @@
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-officedocument.relationships+xml"/>
   <Default Extension="xml" ContentType="application/xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats.org/spreadsheetml/2006/worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats.org/spreadsheetml/2006/worksheet+xml"/>
-  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats.org/spreadsheetml/2006/styles+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
 </Types>`;
 
         const filesMap = {
           "[Content_Types].xml": contentTypesXml,
           "_rels/.rels": rootRelsXml,
+          "docProps/core.xml": coreXml,
+          "docProps/app.xml": appXml,
           "xl/workbook.xml": workbookXml,
           "xl/_rels/workbook.xml.rels": workbookRelsXml,
           "xl/styles.xml": stylesXml,
