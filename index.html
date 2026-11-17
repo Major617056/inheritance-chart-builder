@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- 嚴格資安防護策略 (CSP)：從瀏覽器底層強制封鎖任何對外網路連線 (connect-src 'none') 與表單外傳 (form-action 'none') -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data: blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none';" />
-  <title>繼承系統表產生器｜本機離線安全版（支援 Excel / PNG / PDF 匯出與產出後直接修改）</title>
+  <title>繼承系統表產生器｜本機離線安全版（支援 Word / 圖片 / PDF 匯出與產出後直接修改）</title>
   <style>
     :root {
       --background: #f8fafc;
@@ -488,7 +488,7 @@
           </span>
         </div>
         <p class="text-xs text-[var(--muted-foreground,#475569)]">
-          逐一輸入被繼承人、配偶與各代繼承人（含出生／死亡日期），產出後可隨時點擊圖表修改並匯出 Excel / 圖片 / PDF
+          逐一輸入被繼承人、配偶與各代繼承人（含出生／死亡日期），產出後可隨時點擊圖表修改並匯出 Word / 圖片 / PDF
         </p>
       </div>
     </div>
@@ -517,10 +517,10 @@
         <input id="input-load-json" type="file" accept=".json" class="hidden" onchange="importProjectJSON(event)" />
       </label>
       <span class="h-4 w-px bg-[var(--border,#cbd5e1)] mx-0.5"></span>
-      <button id="btn-export-excel" type="button" onclick="exportAsExcel()"
-        class="px-3 py-1.5 rounded-md bg-emerald-600 text-white hover:opacity-90 font-semibold shadow-sm transition"
-        title="匯出包含「繼承系統表（圖表排版）」與「繼承人明細清單」雙工作表之 Excel (.xlsx) 檔案">
-        📊 匯出 Excel (.xlsx)
+      <button id="btn-export-word" type="button" onclick="exportAsWord()"
+        class="px-3 py-1.5 rounded-md bg-[var(--primary,#2563eb)] text-[var(--primary-foreground,#ffffff)] hover:opacity-90 font-semibold shadow-sm transition"
+        title="匯出包含「繼承系統表（高畫質圖表）」與「繼承人明細一覽表」之 Word (.docx) 檔案">
+        📄 匯出 Word (.docx)
       </button>
       <button id="btn-export-jpeg" type="button" onclick="exportAsImage('jpeg')"
         class="px-3 py-1.5 rounded-md border border-[var(--border,#cbd5e1)] bg-[var(--secondary,#e2e8f0)] text-[var(--secondary-foreground,#0f172a)] hover:opacity-90 font-semibold transition">
@@ -940,7 +940,7 @@
           <div class="font-bold text-[var(--foreground,#0f172a)]">🔒 資安與個資零外洩承諾</div>
           <p class="m-0 leading-relaxed">
             1. 本工具為<strong>純前端單一檔案程式</strong>，無任何後端資料庫或遠端 API，資料只會在本機電腦中作業，絕不會上傳至網路上。<br/>
-            2. 匯出之 <strong>Excel (.xlsx)</strong>、<strong>PNG 圖片</strong>、<strong>PDF</strong> 與 <strong>JSON 專案檔</strong> 均於您的電腦本機記憶體中直接產出下載，不經過任何網路傳輸。
+            2. 匯出之 <strong>Word (.docx)</strong>、<strong>JPEG / PNG 圖片</strong>、<strong>PDF</strong> 與 <strong>JSON 專案檔</strong> 均於您的電腦本機記憶體中直接產出下載，不經過任何網路傳輸。
           </p>
         </div>
 
@@ -2621,7 +2621,7 @@
       return (c ^ 0xffffffff) >>> 0;
     }
 
-    function createZipBlob(filesMap) {
+    function createZipBlob(filesMap, mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
       const encoder = new TextEncoder();
       const entries = Object.entries(filesMap).map(([name, content]) => {
         const nameBytes = encoder.encode(name);
@@ -2691,19 +2691,8 @@
       ev.setUint16(20, 0, true);
 
       return new Blob([...localParts, ...centralParts, eocd], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        type: mimeType
       });
-    }
-
-    function excelColName(colIdx1Based) {
-      let n = colIdx1Based;
-      let s = "";
-      while (n > 0) {
-        const m = (n - 1) % 26;
-        s = String.fromCharCode(65 + m) + s;
-        n = Math.floor((n - 1) / 26);
-      }
-      return s;
     }
 
     function escapeXml(str) {
@@ -2716,491 +2705,246 @@
         .replace(/'/g, "&apos;");
     }
 
-    function buildWorksheetXml(gridRows, colWidths, merges = []) {
-      const colsXml = colWidths
-        .map((w, idx) => `<col min="${idx + 1}" max="${idx + 1}" width="${w}" customWidth="1"/>`)
-        .join("");
-
-      const rowsXml = gridRows
-        .map((rowObj, rIdx) => {
-          const rNum = rIdx + 1;
-          const htAttr = rowObj.height ? ` ht="${rowObj.height}" customHeight="1"` : "";
-          const cellsXml = (rowObj.cells || [])
-            .map((cell, cIdx) => {
-              if (!cell || (cell.v === undefined || cell.v === null || cell.v === "") && !cell.s) {
-                return "";
-              }
-              const ref = `${excelColName(cIdx + 1)}${rNum}`;
-              const styleAttr = cell.s ? ` s="${cell.s}"` : "";
-              const valStr = escapeXml(cell.v ?? "");
-              return `<c r="${ref}" t="inlineStr"${styleAttr}><is><t xml:space="preserve">${valStr}</t></is></c>`;
-            })
-            .join("");
-          return `<row r="${rNum}"${htAttr}>${cellsXml}</row>`;
-        })
-        .join("");
-
-      const mergeXml =
-        merges.length > 0
-          ? `<mergeCells count="${merges.length}">${merges.map((m) => `<mergeCell ref="${m}"/>`).join("")}</mergeCells>`
-          : "";
-
-      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <sheetViews><sheetView workbookViewId="0" showGridLines="1"/></sheetViews>
-  <cols>${colsXml}</cols>
-  <sheetData>${rowsXml}</sheetData>
-  ${mergeXml}
-  <pageSetup paperSize="9" orientation="landscape"/>
-</worksheet>`;
-    }
-
     function getChildrenOf(parentId) {
       return appState.heirs.filter((h) => h.parentId === parentId);
     }
 
-    function formatPersonBlockText(title, name, idNumber, address, birthObj, deathObj, note, includeBirth) {
-      const lines = [];
-      const dStr = formatDateObj(deathObj);
-      const decInfo = getInlineDeceasedInfo(dStr, note);
-      const head = `${title ? title + " " : ""}${name || ""}${decInfo.tag || ""}`.trim();
-      if (head) lines.push(head);
-      if (idNumber && idNumber.trim()) lines.push(`身分證字號：${idNumber.trim()}`);
-      if (address && address.trim()) lines.push(`戶籍地：${address.trim()}`);
-      if (includeBirth) {
-        const bStr = formatDateObj(birthObj);
-        if (bStr) lines.push(`出生：${bStr}`);
-      }
-      if (dStr) lines.push(`死亡：${dStr}`);
-      if (note && !decInfo.hideNote) lines.push(note);
-      return lines.join("\n");
+    function buildWordParagraph(text, opts = {}) {
+      const { bold = false, sizeHalfPt = 22, align = "left", spacingAfter = 120, spacingBefore = 0 } = opts;
+      const jc = align !== "left" ? `<w:jc w:val="${align}"/>` : "";
+      const bTag = bold ? "<w:b/><w:bCs/>" : "";
+      return `<w:p>
+        <w:pPr><w:spacing w:before="${spacingBefore}" w:after="${spacingAfter}"/>${jc}</w:pPr>
+        <w:r>
+          <w:rPr>
+            <w:rFonts w:ascii="DFKai-SB" w:eastAsia="DFKai-SB" w:hAnsi="DFKai-SB"/>
+            ${bTag}
+            <w:sz w:val="${sizeHalfPt}"/><w:szCs w:val="${sizeHalfPt}"/>
+          </w:rPr>
+          <w:t xml:space="preserve">${escapeXml(text)}</w:t>
+        </w:r>
+      </w:p>`;
     }
 
-    function exportAsExcel() {
-      const dec = appState.decedent;
-      const showBirth = appState.config.showBirthForAll;
+    function buildWordTableCell(text, widthTwips, opts = {}) {
+      const { bold = false, bgHex = "", align = "left", sizeHalfPt = 20 } = opts;
+      const shd = bgHex ? `<w:shd w:val="clear" w:color="auto" w:fill="${bgHex}"/>` : "";
+      return `<w:tc>
+        <w:tcPr>
+          <w:tcW w:w="${widthTwips}" w:type="dxa"/>
+          <w:tcBorders>
+            <w:top w:val="single" w:sz="4" w:space="0" w:color="94A3B8"/>
+            <w:left w:val="single" w:sz="4" w:space="0" w:color="94A3B8"/>
+            <w:bottom w:val="single" w:sz="4" w:space="0" w:color="94A3B8"/>
+            <w:right w:val="single" w:sz="4" w:space="0" w:color="94A3B8"/>
+          </w:tcBorders>
+          ${shd}
+          <w:vAlign w:val="center"/>
+        </w:tcPr>
+        ${buildWordParagraph(text, { bold, sizeHalfPt, align, spacingAfter: 40, spacingBefore: 40 })}
+      </w:tc>`;
+    }
 
-      // =====================================================
-      // 建立工作表 1：繼承系統表（視覺化樹狀排版）
-      // =====================================================
-      // 計算樹狀結構每一列與世代深度
-      let maxGenDepth = 1;
-      function getMaxGen(parentId, depth) {
-        const ch = getChildrenOf(parentId);
-        if (ch.length > 0) {
-          maxGenDepth = Math.max(maxGenDepth, depth);
-          ch.forEach((c) => getMaxGen(c.id, depth + 1));
+    async function exportAsWord() {
+      try {
+        const rendered = await renderChartToCanvas(2);
+        if (!rendered || !rendered.canvas) {
+          alert("無法產生圖表影像，請稍後再試。");
+          return;
         }
-      }
-      getMaxGen("root", 1);
-
-      // 將樹狀結構展開為 2D 座標列 (每一個葉節點分支佔一列或依子樹高度展開)
-      const treeRows = [];
-      function layoutSubtree(parentId, genIndex, startRow) {
-        const children = getChildrenOf(parentId);
-        if (children.length === 0) return startRow;
-
-        let cursorRow = startRow;
-        const childRowPositions = [];
-
-        children.forEach((child) => {
-          const thisRow = cursorRow;
-          childRowPositions.push(thisRow);
-          while (treeRows.length <= thisRow) treeRows.push({});
-
-          let text = formatPersonBlockText(
-            child.title,
-            child.name,
-            child.idNumber,
-            child.address,
-            child.birth,
-            child.death,
-            child.note,
-            showBirth
-          );
-          if (Array.isArray(child.spouses) && child.spouses.length > 0) {
-            const spTexts = child.spouses.map((sp) =>
-              "──\n" + formatPersonBlockText(sp.title || "配偶", sp.name, sp.idNumber, sp.address, sp.birth, sp.death, sp.note, showBirth)
-            );
-            text += "\n" + spTexts.join("\n");
-          }
-          treeRows[thisRow][`node_${genIndex}`] = {
-            text,
-            lineCount: text.split("\n").length
-          };
-
-          const subChildren = getChildrenOf(child.id);
-          if (subChildren.length > 0) {
-            treeRows[thisRow][`conn_${genIndex}`] = "───";
-            const nextRowAfterSub = layoutSubtree(child.id, genIndex + 1, cursorRow);
-            cursorRow = Math.max(cursorRow + 1, nextRowAfterSub);
-          } else {
-            cursorRow += 1;
-          }
-
-          if (child.dotsAfter) {
-            while (treeRows.length <= cursorRow) treeRows.push({});
-            treeRows[cursorRow][`node_${genIndex}`] = {
-              text: "⋮",
-              lineCount: 1,
-              isDots: true
-            };
-            cursorRow += 1;
-          }
-        });
-
-        // 繪製此世代左側的直豎括號符號（┌─、├─、│、└─、──）
-        if (childRowPositions.length === 1) {
-          const r = childRowPositions[0];
-          treeRows[r][`spine_${genIndex}`] = "───";
-        } else if (childRowPositions.length > 1) {
-          const firstR = childRowPositions[0];
-          const lastR = childRowPositions[childRowPositions.length - 1];
-          for (let r = firstR; r <= lastR; r++) {
-            const isChild = childRowPositions.includes(r);
-            if (r === firstR) {
-              treeRows[r][`spine_${genIndex}`] = "┌──";
-            } else if (r === lastR) {
-              treeRows[r][`spine_${genIndex}`] = "└──";
-            } else if (isChild) {
-              treeRows[r][`spine_${genIndex}`] = "├──";
-            } else {
-              treeRows[r][`spine_${genIndex}`] = "│  ";
-            }
-          }
+        const { canvas, width, height } = rendered;
+        const pngBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (!pngBlob) {
+          alert("Word 圖表壓縮失敗，請改用「列印 / 另存 PDF」。");
+          return;
         }
+        const pngBytes = new Uint8Array(await pngBlob.arrayBuffer());
 
-        return cursorRow;
-      }
+        // 計算圖片在 A4 橫式頁面中的適應大小（EMU：1px = 9525）
+        const maxWidthEmu = 9300000;
+        const maxHeightEmu = 5600000;
+        let imgW = Math.max(1, width) * 9525;
+        let imgH = Math.max(1, height) * 9525;
+        const ratio = Math.min(maxWidthEmu / imgW, maxHeightEmu / imgH, 1);
+        imgW = Math.round(imgW * ratio);
+        imgH = Math.round(imgH * ratio);
 
-      layoutSubtree("root", 1, 0);
+        const dec = appState.decedent;
+        const titleText = (appState.config.chartTitle || "").trim() || "繼 承 系 統 表";
 
-      // 準備工作表 1 的欄位與列資料
-      // Col 1 (A): 被繼承人與配偶欄
-      // 每一代佔 2 欄：Col (2*g): 連接線欄 (┌──/├──/└──), Col (2*g+1): 繼承人節點欄
-      const totalColsSheet1 = Math.max(5, 1 + maxGenDepth * 2);
-      const colWidthsSheet1 = [32];
-      for (let g = 1; g <= maxGenDepth; g++) {
-        colWidthsSheet1.push(7, 30);
-      }
-      while (colWidthsSheet1.length < totalColsSheet1) colWidthsSheet1.push(18);
+        // 收集明細表資料
+        const tableRowsData = [];
+        const decDeathStr = formatDateObj(dec.death);
+        const decInfo = getInlineDeceasedInfo(decDeathStr, dec.note);
+        tableRowsData.push([
+          "被繼承人",
+          dec.title || "被繼承人",
+          `${dec.name || ""}${decInfo.tag || ""}`,
+          dec.idNumber || "",
+          dec.address || "",
+          formatDateObj(dec.birth),
+          decDeathStr,
+          decInfo.hideNote ? "" : (dec.note || "")
+        ]);
 
-      const sheet1Rows = [];
-      const sheet1Merges = [];
-
-      // 第 1 列：表頭大標題
-      const titleText = (appState.config.chartTitle || "").trim() || `${dec.name || ""} 繼承系統表`;
-      sheet1Rows.push({
-        height: 36,
-        cells: [{ v: titleText, s: 1 }]
-      });
-      sheet1Merges.push(`A1:${excelColName(totalColsSheet1)}1`);
-
-      // 第 2 列：本機離線產製安全標記
-      sheet1Rows.push({
-        height: 20,
-        cells: [{ v: "【本檔案由「繼承系統表產生器」於本機電腦離線產生，全程未上傳至網際網路】", s: 6 }]
-      });
-      sheet1Merges.push(`A2:${excelColName(totalColsSheet1)}2`);
-
-      // 第 3 列：空白間隔列
-      sheet1Rows.push({ height: 12, cells: [] });
-
-      // 第 4 列：欄位世代標示列
-      const genHeaderCells = [{ v: "【被繼承人與配偶】", s: 2 }];
-      for (let g = 1; g <= maxGenDepth; g++) {
-        genHeaderCells.push({ v: "", s: 2 });
-        genHeaderCells.push({ v: `【第 ${g} 代直系／繼承人】`, s: 2 });
-      }
-      sheet1Rows.push({ height: 26, cells: genHeaderCells });
-
-      // 準備左側被繼承人與配偶區塊列
-      const decLeftItems = [];
-      const decNoteTrimmed = (dec.note || "").trim();
-      const decInline = (decNoteTrimmed === "歿" || decNoteTrimmed === "(歿)" || decNoteTrimmed === "（歿）") ? ` ${decNoteTrimmed}` : "";
-      const decLines = [`${dec.title || "被繼承人"}：${dec.name || ""}${decInline}`];
-      if (dec.idNumber && dec.idNumber.trim()) decLines.push(`身分證字號：${dec.idNumber.trim()}`);
-      if (dec.address && dec.address.trim()) decLines.push(`戶籍地：${dec.address.trim()}`);
-      const decBirthStr = formatDateObj(dec.birth);
-      const decDeathStr = formatDateObj(dec.death);
-      if (decBirthStr) decLines.push(`出生日期：${decBirthStr}`);
-      decLines.push(`死亡日期：${decDeathStr || "（未填）"}`);
-      if (decNoteTrimmed && !decInline) decLines.push(decNoteTrimmed);
-      decLeftItems.push({
-        text: decLines.join("\n"),
-        lineCount: decLines.length
-      });
-
-      (appState.spouses || []).forEach((sp) => {
-        const spText = formatPersonBlockText(sp.title, sp.name, sp.idNumber, sp.address, sp.birth, sp.death, sp.note, showBirth);
-        decLeftItems.push({
-          text: spText,
-          lineCount: spText.split("\n").length
+        appState.spouses.forEach((sp, idx) => {
+          const spD = formatDateObj(sp.death);
+          const spInfo = getInlineDeceasedInfo(spD, sp.note);
+          tableRowsData.push([
+            `被繼承人配偶 #${idx + 1}`,
+            sp.title || "配偶",
+            `${sp.name || ""}${spInfo.tag || ""}`,
+            sp.idNumber || "",
+            sp.address || "",
+            formatDateObj(sp.birth),
+            spD,
+            spInfo.hideNote ? "" : (sp.note || "")
+          ]);
         });
-      });
 
-      const bodyRowCount = Math.max(treeRows.length, decLeftItems.length, 1);
-      for (let r = 0; r < bodyRowCount; r++) {
-        const rowCells = new Array(totalColsSheet1).fill(null).map(() => ({ v: "" }));
-        let maxLinesInRow = 1;
-
-        if (r < decLeftItems.length) {
-          rowCells[0] = { v: decLeftItems[r].text, s: r === 0 ? 3 : 4 };
-          maxLinesInRow = Math.max(maxLinesInRow, decLeftItems[r].lineCount);
-        }
-
-        const tRow = treeRows[r] || {};
-        for (let g = 1; g <= maxGenDepth; g++) {
-          const spineColIdx = (g - 1) * 2 + 1;
-          const nodeColIdx = (g - 1) * 2 + 2;
-
-          let spineStr = tRow[`spine_${g}`] || "";
-          if (g > 1 && tRow[`conn_${g - 1}`] && !spineStr) {
-            spineStr = "───";
-          }
-          if (spineStr) {
-            rowCells[spineColIdx] = { v: spineStr, s: 5 };
-          }
-
-          const nodeInfo = tRow[`node_${g}`];
-          if (nodeInfo) {
-            rowCells[nodeColIdx] = {
-              v: nodeInfo.text,
-              s: nodeInfo.isDots ? 5 : 4
-            };
-            maxLinesInRow = Math.max(maxLinesInRow, nodeInfo.lineCount);
-          }
-        }
-
-        sheet1Rows.push({
-          height: Math.max(26, maxLinesInRow * 18 + 8),
-          cells: rowCells
-        });
-      }
-
-      // 空一列後加入頁尾切結文字
-      sheet1Rows.push({ height: 14, cells: [] });
-      if (appState.config.showLegalFooter && appState.config.legalText) {
-        const footerLines = appState.config.legalText.split("\n").length;
-        const footerRowIdx = sheet1Rows.length + 1;
-        sheet1Rows.push({
-          height: Math.max(28, footerLines * 18 + 8),
-          cells: [{ v: appState.config.legalText, s: 6 }]
-        });
-        sheet1Merges.push(`A${footerRowIdx}:${excelColName(totalColsSheet1)}${footerRowIdx}`);
-      }
-
-      // =====================================================
-      // 建立工作表 2：繼承人明細清單（結構化表格）
-      // =====================================================
-      const colWidthsSheet2 = [10, 16, 16, 16, 18, 28, 20, 22, 22, 26];
-      const sheet2Rows = [];
-      const sheet2Merges = [];
-
-      sheet2Rows.push({
-        height: 32,
-        cells: [{ v: `${dec.name || ""} 繼承系統表 — 親屬與繼承人明細清單`, s: 1 }]
-      });
-      sheet2Merges.push("A1:J1");
-
-      sheet2Rows.push({
-        height: 26,
-        cells: [
-          { v: "序號", s: 2 },
-          { v: "身分別／世代", s: 2 },
-          { v: "稱謂", s: 2 },
-          { v: "姓名", s: 2 },
-          { v: "身分證字號", s: 2 },
-          { v: "戶籍地", s: 2 },
-          { v: "上層親屬（父母／配偶）", s: 2 },
-          { v: "出生日期", s: 2 },
-          { v: "死亡日期", s: 2 },
-          { v: "狀態／備註", s: 2 }
-        ]
-      });
-
-      let seq = 1;
-      // 1. 被繼承人本人
-      sheet2Rows.push({
-        height: 24,
-        cells: [
-          { v: String(seq++), s: 5 },
-          { v: "被繼承人", s: 7 },
-          { v: dec.title || "被繼承人", s: 7 },
-          { v: dec.name || "", s: 7 },
-          { v: dec.idNumber || "—", s: 7 },
-          { v: dec.address || "—", s: 7 },
-          { v: "—", s: 5 },
-          { v: formatDateObj(dec.birth) || "—", s: 7 },
-          { v: formatDateObj(dec.death) || "—", s: 7 },
-          { v: dec.note || "被繼承人本人", s: 7 }
-        ]
-      });
-
-      // 2. 配偶
-      (appState.spouses || []).forEach((sp) => {
-        sheet2Rows.push({
-          height: 24,
-          cells: [
-            { v: String(seq++), s: 5 },
-            { v: "被繼承人配偶", s: 7 },
-            { v: sp.title || "配偶", s: 7 },
-            { v: sp.name || "", s: 7 },
-            { v: sp.idNumber || "—", s: 7 },
-            { v: sp.address || "—", s: 7 },
-            { v: `被繼承人 ${dec.name || ""} 之配偶`, s: 7 },
-            { v: formatDateObj(sp.birth) || "—", s: 7 },
-            { v: formatDateObj(sp.death) || "—", s: 7 },
-            { v: sp.note || "", s: 7 }
-          ]
-        });
-      });
-
-      // 3. 遞迴列出各代繼承人（含其配偶）
-      function appendHeirRows(parentId, depth, parentLabel) {
-        const ch = getChildrenOf(parentId);
-        ch.forEach((h) => {
-          const selfLabel = `${h.title || ""}${h.name ? " " + h.name : ""}`.trim();
-          sheet2Rows.push({
-            height: 24,
-            cells: [
-              { v: String(seq++), s: 5 },
-              { v: `第 ${depth} 代直系血親`, s: 7 },
-              { v: h.title || "", s: 7 },
-              { v: h.name || "", s: 7 },
-              { v: h.idNumber || "—", s: 7 },
-              { v: h.address || "—", s: 7 },
-              { v: parentLabel, s: 7 },
-              { v: formatDateObj(h.birth) || "—", s: 7 },
-              { v: formatDateObj(h.death) || "—", s: 7 },
-              { v: h.note || (h.dotsAfter ? "（下方含省略號 ⋮）" : ""), s: 7 }
-            ]
-          });
-          if (Array.isArray(h.spouses)) {
-            h.spouses.forEach((sp) => {
-              sheet2Rows.push({
-                height: 24,
-                cells: [
-                  { v: String(seq++), s: 5 },
-                  { v: `第 ${depth} 代配偶`, s: 7 },
-                  { v: sp.title || "配偶", s: 7 },
-                  { v: sp.name || "", s: 7 },
-                  { v: sp.idNumber || "—", s: 7 },
-                  { v: sp.address || "—", s: 7 },
-                  { v: `${selfLabel} 之配偶`, s: 7 },
-                  { v: formatDateObj(sp.birth) || "—", s: 7 },
-                  { v: formatDateObj(sp.death) || "—", s: 7 },
-                  { v: sp.note || "", s: 7 }
-                ]
+        function walkHeirsForWord(parentId, gen) {
+          getChildrenOf(parentId).forEach((h) => {
+            const hD = formatDateObj(h.death);
+            const hInfo = getInlineDeceasedInfo(hD, h.note);
+            tableRowsData.push([
+              `第 ${gen} 代繼承人`,
+              h.title || "",
+              `${h.name || ""}${hInfo.tag || ""}`,
+              h.idNumber || "",
+              h.address || "",
+              formatDateObj(h.birth),
+              hD,
+              hInfo.hideNote ? "" : (h.note || "")
+            ]);
+            if (Array.isArray(h.spouses)) {
+              h.spouses.forEach((sp) => {
+                const spD = formatDateObj(sp.death);
+                const spInfo = getInlineDeceasedInfo(spD, sp.note);
+                tableRowsData.push([
+                  `第 ${gen} 代配偶（${h.name || h.title || ""}）`,
+                  sp.title || "配偶",
+                  `${sp.name || ""}${spInfo.tag || ""}`,
+                  sp.idNumber || "",
+                  sp.address || "",
+                  formatDateObj(sp.birth),
+                  spD,
+                  spInfo.hideNote ? "" : (sp.note || "")
+                ]);
               });
-            });
-          }
-          appendHeirRows(h.id, depth + 1, selfLabel);
-        });
-      }
-      appendHeirRows("root", 1, `被繼承人 ${dec.name || ""}`);
+            }
+            walkHeirsForWord(h.id, gen + 1);
+          });
+        }
+        walkHeirsForWord("root", 1);
 
-      // =====================================================
-      // 封裝 OpenXML (.xlsx) 檔案結構並觸發下載
-      // =====================================================
-      const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <fonts count="6">
-    <font><sz val="11"/><color rgb="FF111827"/><name val="標楷體"/></font>
-    <font><b/><sz val="18"/><color rgb="FF111827"/><name val="標楷體"/></font>
-    <font><b/><sz val="11"/><color rgb="FF1E293B"/><name val="標楷體"/></font>
-    <font><b/><sz val="12"/><color rgb="FF0F172A"/><name val="標楷體"/></font>
-    <font><b/><sz val="14"/><color rgb="FF334155"/><name val="標楷體"/></font>
-    <font><sz val="10"/><color rgb="FF475569"/><name val="標楷體"/></font>
-  </fonts>
-  <fills count="5">
-    <fill><patternFill patternType="none"/></fill>
-    <fill><patternFill patternType="gray125"/></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFE2E8F0"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFF8FAFC"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFFEFCE8"/></patternFill></fill>
-  </fills>
-  <borders count="3">
-    <border><left/><right/><top/><bottom/><diagonal/></border>
-    <border>
-      <left style="thin"><color rgb="FF94A3B8"/></left>
-      <right style="thin"><color rgb="FF94A3B8"/></right>
-      <top style="thin"><color rgb="FF94A3B8"/></top>
-      <bottom style="thin"><color rgb="FF94A3B8"/></bottom>
-      <diagonal/>
-    </border>
-    <border>
-      <left style="medium"><color rgb="FF1E293B"/></left>
-      <right style="medium"><color rgb="FF1E293B"/></right>
-      <top style="medium"><color rgb="FF1E293B"/></top>
-      <bottom style="medium"><color rgb="FF1E293B"/></bottom>
-      <diagonal/>
-    </border>
-  </borders>
-  <cellStyleXfs count="1">
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
-  </cellStyleXfs>
-  <cellXfs count="8">
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
-    <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1">
-      <alignment horizontal="center" vertical="center"/>
-    </xf>
-    <xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">
-      <alignment horizontal="center" vertical="center" wrapText="1"/>
-    </xf>
-    <xf numFmtId="0" fontId="3" fillId="4" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">
-      <alignment horizontal="left" vertical="center" wrapText="1"/>
-    </xf>
-    <xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">
-      <alignment horizontal="left" vertical="center" wrapText="1"/>
-    </xf>
-    <xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1">
-      <alignment horizontal="center" vertical="center"/>
-    </xf>
-    <xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1">
-      <alignment horizontal="left" vertical="center" wrapText="1"/>
-    </xf>
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1">
-      <alignment horizontal="left" vertical="center" wrapText="1"/>
-    </xf>
-  </cellXfs>
-</styleSheet>`;
+        const colWidths = [1850, 1100, 1550, 1650, 3200, 1850, 1850, 2348];
+        const headers = ["類別／層級", "稱謂", "姓名", "身分證字號", "戶籍地", "出生年月日", "死亡年月日", "狀態／備註"];
+        const headerRowXml = `<w:tr>${headers
+          .map((h, i) => buildWordTableCell(h, colWidths[i], { bold: true, bgHex: "E2E8F0", align: "center" }))
+          .join("")}</w:tr>`;
+        const bodyRowsXml = tableRowsData
+          .map(
+            (row) =>
+              `<w:tr>${row
+                .map((cell, i) => buildWordTableCell(cell, colWidths[i], { align: i === 1 || i === 3 ? "center" : "left" }))
+                .join("")}</w:tr>`
+          )
+          .join("");
 
-      const filesMap = {
-        "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        const legalParaXml =
+          appState.config.showLegalFooter && appState.config.legalText
+            ? appState.config.legalText
+                .split("\n")
+                .map((line) => buildWordParagraph(line, { sizeHalfPt: 20, spacingAfter: 60 }))
+                .join("")
+            : "";
+
+        const drawingXml = `<w:p>
+          <w:pPr><w:jc w:val="center"/><w:spacing w:after="160"/></w:pPr>
+          <w:r>
+            <w:drawing>
+              <wp:inline distT="0" distB="0" distL="0" distR="0"
+                xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+                <wp:extent cx="${imgW}" cy="${imgH}"/>
+                <wp:docPr id="1" name="InheritanceChart"/>
+                <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                  <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                    <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                      <pic:nvPicPr>
+                        <pic:cNvPr id="0" name="chart.png"/>
+                        <pic:cNvPicPr/>
+                      </pic:nvPicPr>
+                      <pic:blipFill>
+                        <a:blip r:embed="rId1"/>
+                        <a:stretch><a:fillRect/></a:stretch>
+                      </pic:blipFill>
+                      <pic:spPr>
+                        <a:xfrm><a:off x="0" y="0"/><a:ext cx="${imgW}" cy="${imgH}"/></a:xfrm>
+                        <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                      </pic:spPr>
+                    </pic:pic>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:inline>
+            </w:drawing>
+          </w:r>
+        </w:p>`;
+
+        const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <w:body>
+    ${buildWordParagraph(titleText, { bold: true, sizeHalfPt: 40, align: "center", spacingAfter: 200 })}
+    ${drawingXml}
+    ${legalParaXml}
+    <w:p><w:r><w:br w:type="page"/></w:r></w:p>
+    ${buildWordParagraph("繼承人明細一覽表", { bold: true, sizeHalfPt: 30, align: "left", spacingAfter: 140 })}
+    <w:tbl>
+      <w:tblPr>
+        <w:tblW w:w="15398" w:type="dxa"/>
+        <w:tblLayout w:type="fixed"/>
+      </w:tblPr>
+      <w:tblGrid>${colWidths.map((w) => `<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>
+      ${headerRowXml}
+      ${bodyRowsXml}
+    </w:tbl>
+    <w:sectPr>
+      <w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>
+      <w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="400" w:footer="400" w:gutter="0"/>
+    </w:sectPr>
+  </w:body>
+</w:document>`;
+
+        const filesMap = {
+          "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-officedocument.relationships+xml"/>
   <Default Extension="xml" ContentType="application/xml"/>
-  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  <Default Extension="png" ContentType="image/png"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
 </Types>`,
-        "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
 </Relationships>`,
-        "xl/workbook.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <sheets>
-    <sheet name="繼承系統表" sheetId="1" r:id="rId1"/>
-    <sheet name="繼承人明細清單" sheetId="2" r:id="rId2"/>
-  </sheets>
-</workbook>`,
-        "xl/_rels/workbook.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+          "word/_rels/document.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
-  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/chart.png"/>
 </Relationships>`,
-        "xl/styles.xml": stylesXml,
-        "xl/worksheets/sheet1.xml": buildWorksheetXml(sheet1Rows, colWidthsSheet1, sheet1Merges),
-        "xl/worksheets/sheet2.xml": buildWorksheetXml(sheet2Rows, colWidthsSheet2, sheet2Merges)
-      };
+          "word/media/chart.png": pngBytes,
+          "word/document.xml": documentXml
+        };
 
-      const zipBlob = createZipBlob(filesMap);
-      const decName = (dec.name || "未命名").replace(/[\\/:*?"<>|]/g, "");
-      triggerBlobDownload(zipBlob, `繼承系統表_${decName}.xlsx`);
+        const zipBlob = createZipBlob(
+          filesMap,
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
+        const decName = (dec.name || "未命名").replace(/[\\/:*?"<>|]/g, "");
+        triggerBlobDownload(zipBlob, `繼承系統表_${decName}.docx`);
+      } catch (err) {
+        console.error("匯出 Word 失敗：", err);
+        alert("匯出 Word 檔案時發生錯誤，請改用「列印 / 另存 PDF」或「下載圖片」。");
+      }
     }
 
     function printChart() {
@@ -3227,8 +2971,8 @@
       }, 120);
     }
 
-    // 使用純 Canvas 2D 直接依 DOM 座標繪製高解析度白底圖片（100% 離線相容所有瀏覽器，無 foreignObject 跨域/空白問題）
-    async function exportAsImage(format = "jpeg") {
+    // 使用純 Canvas 2D 直接依 DOM 座標繪製高解析度白底圖表（供匯出 Word 與 JPEG/PNG 共用）
+    async function renderChartToCanvas(scale = 2) {
       const sheet = document.getElementById("printable-area");
       const prevSelected = selectedNodeId;
       selectedNodeId = null;
@@ -3243,7 +2987,6 @@
         const sheetRect = sheet.getBoundingClientRect();
         const width = Math.max(1, Math.ceil(sheet.scrollWidth));
         const height = Math.max(1, Math.ceil(sheet.scrollHeight));
-        const scale = 2;
 
         const canvas = document.createElement("canvas");
         canvas.width = width * scale;
@@ -3334,7 +3077,6 @@
           ctx.fillStyle = cs.color || "#111827";
           ctx.textBaseline = "top";
 
-          // 若文字含換行（例如底部切結語），逐行透過 Range 量測座標
           if (rawVal.includes("\n")) {
             let offset = 0;
             const lines = rawVal.split("\n");
@@ -3365,6 +3107,23 @@
           }
         }
 
+        return { canvas, width, height };
+      } finally {
+        selectedNodeId = prevSelected;
+        currentZoom = prevZoom;
+        applyZoom();
+        renderChart();
+      }
+    }
+
+    async function exportAsImage(format = "jpeg") {
+      try {
+        const rendered = await renderChartToCanvas(2);
+        if (!rendered || !rendered.canvas) {
+          alert("圖片產生失敗，請改用「列印 / 另存 PDF」輸出高畫質檔案。");
+          return;
+        }
+        const { canvas } = rendered;
         const isJpeg = format === "jpeg" || format === "jpg";
         const mime = isJpeg ? "image/jpeg" : "image/png";
         const ext = isJpeg ? "jpg" : "png";
@@ -3383,11 +3142,6 @@
       } catch (err) {
         console.error("匯出圖片失敗：", err);
         alert("匯出圖片時發生錯誤，請改用「列印 / 另存 PDF」輸出高畫質檔案。");
-      } finally {
-        selectedNodeId = prevSelected;
-        currentZoom = prevZoom;
-        applyZoom();
-        renderChart();
       }
     }
 
