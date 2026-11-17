@@ -1701,12 +1701,14 @@
         const btn = document.getElementById(`tab-btn-${t}`);
         const panel = document.getElementById(`tab-panel-${t}`);
         if (t === tabName) {
-          btn.classList.add("border-[var(--primary,#2563eb)]", "text-[var(--primary,#2563eb)]");
-          btn.classList.remove("border-transparent", "text-[var(--muted-foreground,#475569)]");
+          btn.style.backgroundColor = "#2563eb";
+          btn.style.color = "#ffffff";
+          btn.style.border = "1.5px solid #1d4ed8";
           panel.classList.remove("hidden");
         } else {
-          btn.classList.remove("border-[var(--primary,#2563eb)]", "text-[var(--primary,#2563eb)]");
-          btn.classList.add("border-transparent", "text-[var(--muted-foreground,#475569)]");
+          btn.style.backgroundColor = "var(--card, #ffffff)";
+          btn.style.color = "var(--foreground, #0f172a)";
+          btn.style.border = "1.5px solid var(--border, #94a3b8)";
           panel.classList.add("hidden");
         }
       });
