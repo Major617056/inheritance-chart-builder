@@ -580,8 +580,9 @@
         📄 Word
       </button>
       <button id="btn-export-excel" type="button" onclick="exportAsExcel()"
-        class="px-2.5 py-1.5 rounded-md bg-emerald-600 text-white hover:opacity-90 font-semibold shadow-sm transition"
-        title="匯出包含「繼承系統表（樹狀排版）」與「繼承人明細清單」雙工作表之 Excel (.xlsx) 檔案">
+        style="background-color:#059669;color:#ffffff;"
+        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-semibold shadow-sm transition"
+        title="匯出包含「繼承系統表（樹狀排版）」與「繼承人明細一覽表」雙工作表之 Excel (.xlsx) 檔案">
         📊 Excel
       </button>
       <button id="btn-export-jpeg" type="button" onclick="exportAsImage('jpeg')"
@@ -593,12 +594,14 @@
         PNG
       </button>
       <button id="btn-export-pdf" type="button" onclick="exportAsPdf()"
-        class="px-2.5 py-1.5 rounded-md bg-rose-600 text-white hover:opacity-90 font-semibold shadow-sm transition"
-        title="直接產出並下載單頁 A4 橫式 PDF 檔案（免透過列印對話框）">
+        style="background-color:#dc2626;color:#ffffff;"
+        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-semibold shadow-sm transition"
+        title="直接產出並下載 PDF 檔案（含「繼承系統表」與「繼承人明細一覽表」）">
         📕 PDF
       </button>
       <button id="btn-print" type="button" onclick="printChart()"
-        class="px-2.5 py-1.5 rounded-md bg-slate-800 text-white hover:opacity-90 font-semibold shadow-sm transition"
+        style="background-color:#1e293b;color:#ffffff;"
+        class="px-2.5 py-1.5 rounded-md hover:opacity-90 font-semibold shadow-sm transition"
         title="開啟印表機列印（自動等比例縮放納入單頁）">
         🖨️ 列印
       </button>
@@ -3129,16 +3132,21 @@
           <w:pPr><w:jc w:val="center"/><w:spacing w:after="160"/></w:pPr>
           <w:r>
             <w:drawing>
-              <wp:inline distT="0" distB="0" distL="0" distR="0"
-                xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+              <wp:inline distT="0" distB="0" distL="0" distR="0">
                 <wp:extent cx="${imgW}" cy="${imgH}"/>
+                <wp:effectExtent l="0" t="0" r="0" b="0"/>
                 <wp:docPr id="1" name="InheritanceChart"/>
-                <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                <wp:cNvGraphicFramePr>
+                  <a:graphicFrameLocks noChangeAspect="1"/>
+                </wp:cNvGraphicFramePr>
+                <a:graphic>
                   <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
-                    <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                    <pic:pic>
                       <pic:nvPicPr>
                         <pic:cNvPr id="0" name="chart.png"/>
-                        <pic:cNvPicPr/>
+                        <pic:cNvPicPr>
+                          <a:picLocks noChangeAspect="1"/>
+                        </pic:cNvPicPr>
                       </pic:nvPicPr>
                       <pic:blipFill>
                         <a:blip r:embed="rId1"/>
@@ -3158,7 +3166,10 @@
 
         const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+  xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
   <w:body>
     ${buildWordParagraph(titleText, { bold: true, sizeHalfPt: 40, align: "center", spacingAfter: 200 })}
     ${drawingXml}
@@ -3167,6 +3178,14 @@
     <w:tbl>
       <w:tblPr>
         <w:tblW w:w="15398" w:type="dxa"/>
+        <w:tblBorders>
+          <w:top w:val="single" w:sz="4" w:space="0" w:color="94A3B8"/>
+          <w:left w:val="single" w:sz="4" w:space="0" w:color="94A3B8"/>
+          <w:bottom w:val="single" w:sz="4" w:space="0" w:color="94A3B8"/>
+          <w:right w:val="single" w:sz="4" w:space="0" w:color="94A3B8"/>
+          <w:insideH w:val="single" w:sz="4" w:space="0" w:color="94A3B8"/>
+          <w:insideV w:val="single" w:sz="4" w:space="0" w:color="94A3B8"/>
+        </w:tblBorders>
         <w:tblLayout w:type="fixed"/>
       </w:tblPr>
       <w:tblGrid>${colWidths.map((w) => `<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>
@@ -3180,6 +3199,26 @@
   </w:body>
 </w:document>`;
 
+        const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults>
+    <w:rPrDefault>
+      <w:rPr>
+        <w:rFonts w:ascii="DFKai-SB" w:eastAsia="DFKai-SB" w:hAnsi="DFKai-SB"/>
+        <w:sz w:val="22"/><w:szCs w:val="22"/>
+      </w:rPr>
+    </w:rPrDefault>
+  </w:docDefaults>
+  <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+    <w:name w:val="Normal"/>
+  </w:style>
+</w:styles>`;
+
+        const settingsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:defaultTabStop w:val="480"/>
+</w:settings>`;
+
         const filesMap = {
           "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -3187,6 +3226,8 @@
   <Default Extension="xml" ContentType="application/xml"/>
   <Default Extension="png" ContentType="image/png"/>
   <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+  <Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>
 </Types>`,
           "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
@@ -3195,8 +3236,12 @@
           "word/_rels/document.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/chart.png"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>
 </Relationships>`,
           "word/media/chart.png": pngBytes,
+          "word/styles.xml": stylesXml,
+          "word/settings.xml": settingsXml,
           "word/document.xml": documentXml
         };
 
@@ -3282,8 +3327,17 @@
         ? `<mergeCells count="${merges.length}">${merges.map((m) => `<mergeCell ref="${m}"/>`).join("")}</mergeCells>`
         : "";
 
+      let maxR = 1;
+      let maxC = 1;
+      cells.forEach((cell) => {
+        if (cell.r > maxR) maxR = cell.r;
+        if (cell.c > maxC) maxC = cell.c;
+      });
+      const dimRef = `A1:${excelColName(maxC)}${maxR}`;
+
       return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <dimension ref="${dimRef}"/>
   <sheetViews><sheetView workbookViewId="0"/></sheetViews>
   <sheetFormatPr defaultRowHeight="22"/>
   ${colsXml}
@@ -3327,13 +3381,16 @@
   </borders>
   <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
   <cellXfs count="6">
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
-    <xf numFmtId="0" fontId="1" fillId="0" borderId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
-    <xf numFmtId="0" fontId="2" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
-    <xf numFmtId="0" fontId="3" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
-    <xf numFmtId="0" fontId="0" fillId="4" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
-    <xf numFmtId="0" fontId="0" fillId="5" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="3" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
   </cellXfs>
+  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+  <dxfs count="0"/>
+  <tableStyles count="0" defaultTableStyle="TableStyleMedium2" defaultPivotStyle="PivotStyleLight16"/>
 </styleSheet>`;
 
         // Sheet 1: 繼承系統表（階層方格排版）
@@ -3494,7 +3551,7 @@
   xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <sheets>
     <sheet name="繼承系統表" sheetId="1" r:id="rId1"/>
-    <sheet name="繼承人明細" sheetId="2" r:id="rId2"/>
+    <sheet name="繼承人明細一覽表" sheetId="2" r:id="rId2"/>
   </sheets>
 </workbook>`;
 
@@ -3542,6 +3599,181 @@
       }
     }
 
+    function collectDetailTableRows() {
+      const dec = appState.decedent;
+      const rows = [];
+      const decDeathStr = formatDateObj(dec.death);
+      const decInfo = getInlineDeceasedInfo(decDeathStr, dec.note);
+      rows.push([
+        "被繼承人",
+        dec.title || "被繼承人",
+        `${dec.name || ""}${decInfo.tag || ""}`,
+        dec.idNumber || "",
+        dec.address || "",
+        formatDateObj(dec.birth),
+        decDeathStr,
+        decInfo.hideNote ? "" : (dec.note || "")
+      ]);
+
+      appState.spouses.forEach((sp, idx) => {
+        const spD = formatDateObj(sp.death);
+        const spInfo = getInlineDeceasedInfo(spD, sp.note);
+        rows.push([
+          `被繼承人配偶 #${idx + 1}`,
+          sp.title || "配偶",
+          `${sp.name || ""}${spInfo.tag || ""}`,
+          sp.idNumber || "",
+          sp.address || "",
+          formatDateObj(sp.birth),
+          spD,
+          spInfo.hideNote ? "" : (sp.note || "")
+        ]);
+      });
+
+      function walk(parentId, gen) {
+        getChildrenOf(parentId).forEach((h) => {
+          const hD = formatDateObj(h.death);
+          const hInfo = getInlineDeceasedInfo(hD, h.note);
+          rows.push([
+            `第 ${gen} 代繼承人`,
+            h.title || "",
+            `${h.name || ""}${hInfo.tag || ""}`,
+            h.idNumber || "",
+            h.address || "",
+            formatDateObj(h.birth),
+            hD,
+            hInfo.hideNote ? "" : (h.note || "")
+          ]);
+          if (Array.isArray(h.spouses)) {
+            h.spouses.forEach((sp) => {
+              const spD = formatDateObj(sp.death);
+              const spInfo = getInlineDeceasedInfo(spD, sp.note);
+              rows.push([
+                `第 ${gen} 代配偶（${h.name || h.title || ""}）`,
+                sp.title || "配偶",
+                `${sp.name || ""}${spInfo.tag || ""}`,
+                sp.idNumber || "",
+                sp.address || "",
+                formatDateObj(sp.birth),
+                spD,
+                spInfo.hideNote ? "" : (sp.note || "")
+              ]);
+            });
+          }
+          walk(h.id, gen + 1);
+        });
+      }
+      walk("root", 1);
+      return rows;
+    }
+
+    function renderDetailTableCanvases() {
+      const headers = ["類別／層級", "稱謂", "姓名", "身分證字號", "戶籍地", "出生年月日", "死亡年月日", "狀態／備註"];
+      const colWidths = [200, 110, 175, 165, 360, 200, 200, 230]; // total 1640px
+      const pageW = 1684; // A4 landscape @ 144dpi
+      const pageH = 1190;
+      const marginX = 22;
+      const marginY = 48;
+      const rowH = 52;
+      const headerH = 48;
+      const titleH = 56;
+      const rowsData = collectDetailTableRows();
+      const maxRowsPerPage = Math.max(1, Math.floor((pageH - marginY * 2 - titleH - headerH) / rowH));
+
+      const canvases = [];
+      for (let start = 0; start < Math.max(1, rowsData.length); start += maxRowsPerPage) {
+        const chunk = rowsData.slice(start, start + maxRowsPerPage);
+        const canvas = document.createElement("canvas");
+        canvas.width = pageW;
+        canvas.height = pageH;
+        const ctx = canvas.getContext("2d");
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageW, pageH);
+
+        // 標題
+        ctx.fillStyle = "#0f172a";
+        ctx.font = 'bold 30px "DFKai-SB", "BiauKai", "標楷體", "Noto Serif TC", sans-serif';
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        const pageSuffix = rowsData.length > maxRowsPerPage ? `（第 ${Math.floor(start / maxRowsPerPage) + 1} 頁）` : "";
+        ctx.fillText(`繼承人明細一覽表${pageSuffix}`, marginX, marginY + 24);
+
+        const tableTop = marginY + titleH;
+
+        const drawWrappedCell = (text, x, y, w, h, align, isBold, bg) => {
+          ctx.fillStyle = bg;
+          ctx.fillRect(x, y, w, h);
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 1.2;
+          ctx.strokeRect(x, y, w, h);
+
+          ctx.fillStyle = "#0f172a";
+          ctx.font = `${isBold ? "bold " : ""}18px "DFKai-SB", "BiauKai", "標楷體", "Noto Serif TC", sans-serif`;
+          ctx.textBaseline = "middle";
+          const str = String(text || "");
+          const pad = 10;
+          const maxW = w - pad * 2;
+          const lines = [];
+          let cur = "";
+          for (const ch of str) {
+            if (ctx.measureText(cur + ch).width > maxW && cur) {
+              lines.push(cur);
+              cur = ch;
+            } else {
+              cur += ch;
+            }
+          }
+          if (cur) lines.push(cur);
+          const showLines = lines.slice(0, 2);
+          const lineGap = 20;
+          const startY = y + h / 2 - ((showLines.length - 1) * lineGap) / 2;
+          showLines.forEach((ln, idx) => {
+            if (align === "center") {
+              ctx.textAlign = "center";
+              ctx.fillText(ln, x + w / 2, startY + idx * lineGap);
+            } else {
+              ctx.textAlign = "left";
+              ctx.fillText(ln, x + pad, startY + idx * lineGap);
+            }
+          });
+        };
+
+        // 表頭
+        let curX = marginX;
+        headers.forEach((h, i) => {
+          drawWrappedCell(h, curX, tableTop, colWidths[i], headerH, "center", true, "#e2e8f0");
+          curX += colWidths[i];
+        });
+
+        // 資料列
+        chunk.forEach((row, rIdx) => {
+          const ry = tableTop + headerH + rIdx * rowH;
+          const bg = rIdx % 2 === 1 ? "#f8fafc" : "#ffffff";
+          let cx = marginX;
+          row.forEach((cell, cIdx) => {
+            const align = cIdx === 1 || cIdx === 3 ? "center" : "left";
+            drawWrappedCell(cell, cx, ry, colWidths[cIdx], rowH, align, false, bg);
+            cx += colWidths[cIdx];
+          });
+        });
+
+        canvases.push({ canvas, width: pageW, height: pageH });
+      }
+      return canvases;
+    }
+
+    function canvasToJpegBytes(canvas, quality = 0.93) {
+      const dataUrl = canvas.toDataURL("image/jpeg", quality);
+      const base64 = dataUrl.split(",")[1];
+      const binStr = atob(base64);
+      const bytes = new Uint8Array(binStr.length);
+      for (let i = 0; i < binStr.length; i++) {
+        bytes[i] = binStr.charCodeAt(i);
+      }
+      return bytes;
+    }
+
     async function exportAsPdf() {
       try {
         const sheet = document.getElementById("printable-area");
@@ -3553,29 +3785,29 @@
           alert("無法產生圖表影像，請稍後再試。");
           return;
         }
-        const { canvas, width, height } = rendered;
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.93);
-        const base64 = dataUrl.split(",")[1];
-        const binStr = atob(base64);
-        const jpegBytes = new Uint8Array(binStr.length);
-        for (let i = 0; i < binStr.length; i++) {
-          jpegBytes[i] = binStr.charCodeAt(i);
-        }
 
-        // 自動依長寬比例選擇 A4 橫式或 A4 直式，並等比例縮放納入單頁
-        const isPortrait = height > width * 1.15;
-        const pageW = isPortrait ? 595.28 : 841.89;
-        const pageH = isPortrait ? 841.89 : 595.28;
-        const margin = 24;
-        const availW = pageW - margin * 2;
-        const availH = pageH - margin * 2;
-        const fitScale = Math.min(availW / width, availH / height);
-        const drawW = +(width * fitScale).toFixed(2);
-        const drawH = +(height * fitScale).toFixed(2);
-        const drawX = +((pageW - drawW) / 2).toFixed(2);
-        const drawY = +((pageH - drawH) / 2).toFixed(2);
+        // 第 1 頁：繼承系統表；第 2+ 頁：繼承人明細一覽表
+        const pages = [
+          {
+            width: rendered.width,
+            height: rendered.height,
+            pixelW: rendered.canvas.width,
+            pixelH: rendered.canvas.height,
+            jpegBytes: canvasToJpegBytes(rendered.canvas, 0.93)
+          }
+        ];
 
-        const contentStream = `q\n${drawW} 0 0 ${drawH} ${drawX} ${drawY} cm\n/Im0 Do\nQ\n`;
+        const detailPages = renderDetailTableCanvases();
+        detailPages.forEach((dp) => {
+          pages.push({
+            width: dp.width,
+            height: dp.height,
+            pixelW: dp.canvas.width,
+            pixelH: dp.canvas.height,
+            jpegBytes: canvasToJpegBytes(dp.canvas, 0.93)
+          });
+        });
+
         const enc = new TextEncoder();
         const chunks = [];
         const offsets = [0];
@@ -3586,35 +3818,63 @@
         };
         const pushStr = (s) => pushBytes(enc.encode(s));
 
-        pushStr("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+        pushStr("%PDF-1.4\n%");
+        pushBytes(new Uint8Array([0xe2, 0xe3, 0xcf, 0xd3, 0x0a]));
+
+        // 1: Catalog, 2: Pages, 3..: 每頁 (Page, Image, Content)
+        const pageObjIds = [];
+        let nextObjId = 3;
+        const pageEntries = pages.map((p) => {
+          const pageId = nextObjId++;
+          const imgId = nextObjId++;
+          const contentId = nextObjId++;
+          pageObjIds.push(pageId);
+          return { p, pageId, imgId, contentId };
+        });
 
         offsets[1] = byteLen;
         pushStr("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
 
         offsets[2] = byteLen;
-        pushStr("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+        pushStr(`2 0 obj\n<< /Type /Pages /Kids [${pageObjIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${pageObjIds.length} >>\nendobj\n`);
 
-        offsets[3] = byteLen;
-        pushStr(
-          `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`
-        );
+        pageEntries.forEach(({ p, pageId, imgId, contentId }) => {
+          const isPortrait = p.height > p.width * 1.15;
+          const pageW = isPortrait ? 595.28 : 841.89;
+          const pageH = isPortrait ? 841.89 : 595.28;
+          const margin = 24;
+          const availW = pageW - margin * 2;
+          const availH = pageH - margin * 2;
+          const fitScale = Math.min(availW / p.width, availH / p.height);
+          const drawW = +(p.width * fitScale).toFixed(2);
+          const drawH = +(p.height * fitScale).toFixed(2);
+          const drawX = +((pageW - drawW) / 2).toFixed(2);
+          const drawY = +((pageH - drawH) / 2).toFixed(2);
+          const contentStream = `q\n${drawW} 0 0 ${drawH} ${drawX} ${drawY} cm\n/Im0 Do\nQ\n`;
 
-        offsets[4] = byteLen;
-        pushStr(
-          `4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`
-        );
-        pushBytes(jpegBytes);
-        pushStr("\nendstream\nendobj\n");
+          offsets[pageId] = byteLen;
+          pushStr(
+            `${pageId} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 ${imgId} 0 R >> >> /Contents ${contentId} 0 R >>\nendobj\n`
+          );
 
-        offsets[5] = byteLen;
-        pushStr(`5 0 obj\n<< /Length ${contentStream.length} >>\nstream\n${contentStream}endstream\nendobj\n`);
+          offsets[imgId] = byteLen;
+          pushStr(
+            `${imgId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p.pixelW} /Height ${p.pixelH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpegBytes.length} >>\nstream\n`
+          );
+          pushBytes(p.jpegBytes);
+          pushStr("\nendstream\nendobj\n");
 
+          offsets[contentId] = byteLen;
+          pushStr(`${contentId} 0 obj\n<< /Length ${contentStream.length} >>\nstream\n${contentStream}endstream\nendobj\n`);
+        });
+
+        const totalObjs = nextObjId;
         const xrefStart = byteLen;
-        pushStr(`xref\n0 6\n0000000000 65535 f \n`);
-        for (let i = 1; i <= 5; i++) {
+        pushStr(`xref\n0 ${totalObjs}\n0000000000 65535 f \n`);
+        for (let i = 1; i < totalObjs; i++) {
           pushStr(`${String(offsets[i]).padStart(10, "0")} 00000 n \n`);
         }
-        pushStr(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`);
+        pushStr(`trailer\n<< /Size ${totalObjs} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`);
 
         const pdfBlob = new Blob(chunks, { type: "application/pdf" });
         const decName = (appState.decedent.name || "未命名").replace(/[\\/:*?"<>|]/g, "");
