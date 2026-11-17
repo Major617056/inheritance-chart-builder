@@ -82,6 +82,42 @@
       scroll-behavior: smooth;
     }
 
+    /* 輸入面板字體放大優化（提升電腦螢幕閱讀與填寫舒適度，不影響右側圖表區） */
+    aside .text-xs {
+      font-size: 0.9375rem;
+      line-height: 1.4rem;
+    }
+    aside .text-\[11px\],
+    aside .text-\[10px\] {
+      font-size: 0.8125rem;
+      line-height: 1.25rem;
+    }
+    aside .text-sm {
+      font-size: 1.0625rem;
+      line-height: 1.5rem;
+    }
+    aside input:not([type="checkbox"]):not([type="radio"]),
+    aside select,
+    aside textarea {
+      font-size: 1rem;
+      line-height: 1.5rem;
+      padding-top: 0.45rem;
+      padding-bottom: 0.45rem;
+    }
+    aside input[type="checkbox"] {
+      width: 1.05rem;
+      height: 1.05rem;
+    }
+    aside input.w-14 { width: 4.25rem; }
+    aside input.w-12 { width: 3.75rem; }
+    aside input.w-11 { width: 3.25rem; }
+    aside input.w-10 { width: 3rem; }
+    aside input.w-9 { width: 2.75rem; }
+    aside input[type="date"].w-32 { width: 9.25rem; }
+    aside input[type="date"].w-28 { width: 8.75rem; }
+    aside span.w-14,
+    aside span.w-12 { width: 4.5rem; }
+
     button {
       cursor: pointer;
       background: transparent;
@@ -156,6 +192,8 @@
     }
     @media (min-width: 1280px) {
       .xl\:col-span-4 { grid-column: span 4 / span 4; }
+      .xl\:col-span-5 { grid-column: span 5 / span 5; }
+      .xl\:col-span-7 { grid-column: span 7 / span 7; }
       .xl\:col-span-8 { grid-column: span 8 / span 8; }
     }
 
@@ -520,7 +558,7 @@
   <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-0">
 
     <!-- 左側控制與逐一輸入欄 (5/12) -->
-    <aside class="no-print lg:col-span-5 xl:col-span-4 border-r border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] flex flex-col max-h-[calc(100vh-57px)] overflow-y-auto">
+    <aside class="no-print lg:col-span-5 xl:col-span-5 border-r border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] flex flex-col max-h-[calc(100vh-57px)] overflow-y-auto">
 
       <!-- 分頁切換 -->
       <div class="grid grid-cols-3 border-b border-[var(--border,#cbd5e1)] text-xs font-semibold sticky top-0 bg-[var(--card,#ffffff)] z-20">
@@ -899,8 +937,8 @@
       </div>
     </aside>
 
-    <!-- 右側即時繼承系統表畫布預覽區 (7/12 ~ 8/12) -->
-    <section class="lg:col-span-7 xl:col-span-8 bg-[var(--background,#f1f5f9)] flex flex-col max-h-[calc(100vh-57px)] overflow-auto">
+    <!-- 右側即時繼承系統表畫布預覽區 (7/12) -->
+    <section class="lg:col-span-7 xl:col-span-7 bg-[var(--background,#f1f5f9)] flex flex-col max-h-[calc(100vh-57px)] overflow-auto">
 
       <!-- 畫布上方提示與縮放列 -->
       <div class="no-print px-4 py-2 border-b border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] flex flex-wrap items-center justify-between gap-2 text-xs">
