@@ -772,7 +772,15 @@
             <!-- 6. 備註 / 狀態 與 間隔點（⋮）設定 -->
             <div class="grid grid-cols-12 gap-2 text-xs pt-1">
               <div class="col-span-7">
-                <label class="block text-[var(--muted-foreground,#475569)] mb-1 font-medium">狀態或備註（選填）</label>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="text-[var(--muted-foreground,#475569)] font-medium">狀態或備註</label>
+                  <div class="flex gap-1">
+                    <button type="button" onclick="setQuickNote('歿')" class="px-1.5 py-0.2 text-[10px] rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">歿</button>
+                    <button type="button" onclick="setQuickNote('存')" class="px-1.5 py-0.2 text-[10px] rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">存</button>
+                    <button type="button" onclick="setQuickNote('拋棄繼承')" class="px-1.5 py-0.2 text-[10px] rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">拋棄</button>
+                    <button type="button" onclick="setQuickNote('代位繼承')" class="px-1.5 py-0.2 text-[10px] rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--secondary,#e2e8f0)]">代位</button>
+                  </div>
+                </div>
                 <input id="heir-note" type="text" placeholder="如：歿、拋棄繼承、代位繼承..."
                   class="w-full px-2.5 py-1 rounded border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)]" />
               </div>
@@ -901,6 +909,12 @@
           <span>💡 <strong>產出後修改方式：</strong>直接點擊下方圖表中的<strong>任何人名或區塊</strong>，即可修改資料、新增其下一代子女或調整順序！</span>
         </div>
         <div class="flex items-center gap-2">
+          <button id="btn-undo" type="button" onclick="undoLastAction()" disabled
+            class="px-2.5 py-0.5 rounded border border-[var(--border,#cbd5e1)] hover:bg-[var(--secondary,#e2e8f0)] disabled:opacity-40 font-medium transition"
+            title="復原上一步變更 (Ctrl+Z)">
+            ↶ 復原
+          </button>
+          <span class="h-4 w-px bg-[var(--border,#cbd5e1)]"></span>
           <span class="text-[var(--muted-foreground,#475569)]">畫面縮放：</span>
           <button type="button" onclick="adjustZoom(-0.1)" class="px-2 py-0.5 rounded border border-[var(--border,#cbd5e1)] hover:bg-[var(--secondary,#e2e8f0)]">-</button>
           <span id="zoom-readout" class="font-mono w-12 text-center">100%</span>
@@ -3211,6 +3225,10 @@
         .py-2 { padding-top: 8px; padding-bottom: 8px; }
         .pr-16 { padding-right: 64px; }
         .pr-14 { padding-right: 56px; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-800 { color: #1f2937; }
+        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .pl-2 { padding-left: 8px; }
         .pl-4 { padding-left: 16px; }
         .pl-8 { padding-left: 32px; }
         .mb-8 { margin-bottom: 32px; }
@@ -3219,13 +3237,19 @@
         .mt-1\\.5 { margin-top: 6px; }
         .mt-1 { margin-top: 4px; }
         .mt-0\\.5 { margin-top: 2px; }
+        .ml-1\\.5 { margin-left: 6px; }
         .ml-2 { margin-left: 8px; }
         .mr-1 { margin-right: 4px; }
+        .pt-1 { padding-top: 4px; }
         .pt-4 { padding-top: 16px; }
         .border-t { border-top: 1px solid #9ca3af; }
+        .border-gray-300 { border-color: #d1d5db; }
+        .space-y-1 > * + * { margin-top: 4px; }
         .space-y-4 > * + * { margin-top: 16px; }
         .space-y-5 > * + * { margin-top: 20px; }
         .space-y-3 > * + * { margin-top: 12px; }
+        .gap-1 { gap: 4px; }
+        .gap-1\\.5 { gap: 6px; }
         .gap-2 { gap: 8px; }
       `;
 
@@ -3389,6 +3413,75 @@
       }
     }
 
+    function setQuickNote(text) {
+      const input = document.getElementById("heir-note");
+      if (!input) return;
+      input.value = input.value.trim() === text ? "" : text;
+      input.focus();
+    }
+
+    const undoStack = [];
+    const MAX_UNDO_STEPS = 25;
+
+    function updateUndoButtonUI() {
+      const btn = document.getElementById("btn-undo");
+      if (btn) btn.disabled = undoStack.length === 0;
+    }
+
+    function pushUndoSnapshot() {
+      try {
+        const snap = JSON.stringify(appState);
+        if (undoStack.length > 0 && undoStack[undoStack.length - 1] === snap) return;
+        undoStack.push(snap);
+        if (undoStack.length > MAX_UNDO_STEPS) undoStack.shift();
+        updateUndoButtonUI();
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    function undoLastAction() {
+      if (undoStack.length === 0) return;
+      try {
+        const prev = undoStack.pop();
+        appState = sanitizeImportedState(JSON.parse(prev));
+        selectedNodeId = null;
+        syncAllFormsFromState();
+        renderAll();
+        updateUndoButtonUI();
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // 自動為主要結構異動函式加上復原快照
+    ["submitHeirForm", "deleteHeir", "moveHeir", "addSpouse", "removeSpouse", "resetToBlank", "loadSketchTemplate", "loadDetailedExample"].forEach((fnName) => {
+      const origFn = window[fnName];
+      if (typeof origFn === "function") {
+        window[fnName] = function (...args) {
+          pushUndoSnapshot();
+          return origFn.apply(this, args);
+        };
+      }
+    });
+
+    // 快捷鍵：Ctrl+Z / Cmd+Z 復原（非輸入框焦點時），Esc 取消修改繼承人
+    window.addEventListener("keydown", (e) => {
+      const tag = (document.activeElement?.tagName || "").toLowerCase();
+      const isEditingText = tag === "input" || tag === "textarea" || document.activeElement?.isContentEditable;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey && !isEditingText) {
+        if (undoStack.length > 0) {
+          e.preventDefault();
+          undoLastAction();
+        }
+      } else if (e.key === "Escape") {
+        const editingId = document.getElementById("heir-editing-id")?.value;
+        if (editingId) {
+          resetHeirForm();
+        }
+      }
+    });
+
     // 初始化：優先載入主題偏好與瀏覽器上次儲存的資料，若無則載入與附圖完全一致的結構範本
     window.addEventListener("DOMContentLoaded", () => {
       try {
@@ -3419,6 +3512,8 @@
               appState = sanitizeImportedState(parsed);
               syncAllFormsFromState();
               renderAll();
+              undoStack.length = 0;
+              updateUndoButtonUI();
               return;
             }
           }
@@ -3427,6 +3522,8 @@
         // fallback to sketch template
       }
       loadSketchTemplate();
+      undoStack.length = 0;
+      updateUndoButtonUI();
     });
   </script>
 </body>
