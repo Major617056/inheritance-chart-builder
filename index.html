@@ -654,9 +654,9 @@
       }
       #printable-area {
         position: static !important;
-        width: auto !important;
-        margin: 0 !important;
-        padding: 10mm !important;
+        width: max-content !important;
+        margin: 0 auto !important;
+        padding: 6mm !important;
         box-shadow: none !important;
         border: none !important;
         transform: none !important;
@@ -3062,6 +3062,9 @@
         };
       };
 
+      // 先將 SVG 歸零，避免上一次較大版面的寬高撐大容器造成右側／下方多出大量空白
+      svg.setAttribute("width", "0");
+      svg.setAttribute("height", "0");
       const stageW = stage.scrollWidth;
       const stageH = stage.scrollHeight;
       svg.setAttribute("width", stageW);
@@ -3544,7 +3547,7 @@
         const maxHeightEmu = 5600000;
         let imgW = Math.max(1, width) * 9525;
         let imgH = Math.max(1, height) * 9525;
-        const ratio = Math.min(maxWidthEmu / imgW, maxHeightEmu / imgH, 1);
+        const ratio = Math.min(maxWidthEmu / imgW, maxHeightEmu / imgH);
         imgW = Math.round(imgW * ratio);
         imgH = Math.round(imgH * ratio);
 
@@ -4380,10 +4383,13 @@
         offsets[2] = byteLen;
         pushStr(`2 0 obj\n<< /Type /Pages /Kids [${pageObjIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${pageObjIds.length} >>\nendobj\n`);
 
+        const useA3 = (appState.config.printPaper || "A3-auto").startsWith("A3");
+        const baseShort = useA3 ? 841.89 : 595.28;
+        const baseLong = useA3 ? 1190.55 : 841.89;
         pageEntries.forEach(({ p, pageId, imgId, contentId }) => {
           const isPortrait = p.height > p.width * 1.15;
-          const pageW = isPortrait ? 595.28 : 841.89;
-          const pageH = isPortrait ? 841.89 : 595.28;
+          const pageW = isPortrait ? baseShort : baseLong;
+          const pageH = isPortrait ? baseLong : baseShort;
           const margin = 24;
           const availW = pageW - margin * 2;
           const availH = pageH - margin * 2;
@@ -4579,9 +4585,9 @@
         }
       }
 
-      // 單頁自動縮放（依所選 A3 / A4 與直 / 橫式計算最大可讀比例）
-      const fitPrintScale = Math.min(1, spec.w / w, spec.h / h);
-      if (fitPrintScale < 1) {
+      // 單頁自動縮放（依所選 A3 / A4 與直 / 橫式自動放大或縮小，充滿整頁）
+      const fitPrintScale = Math.min(2.5, spec.w / w, spec.h / h);
+      if (Math.abs(fitPrintScale - 1) > 0.01) {
         sheet.style.zoom = String(fitPrintScale.toFixed(3));
       }
 
