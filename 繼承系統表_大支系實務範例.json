@@ -1,0 +1,587 @@
+{
+  "config": {
+    "chartTitle": "繼 承 系 統 表（大支系實務範例）",
+    "fontFamily": "font-kai",
+    "dateFormat": "roc_full",
+    "showEmptyDates": false,
+    "showBirthForAll": true,
+    "directTextEdit": false,
+    "compactMode": true,
+    "layoutMode": "lr-split",
+    "printPaper": "A3-auto",
+    "printMode": "fit"
+  },
+  "decedent": {
+    "title": "被繼承人",
+    "name": "林添財",
+    "idNumber": "F101234567",
+    "address": "新北市板橋區文化路一段188號",
+    "birth": {
+      "y": "18",
+      "m": "03",
+      "d": "15"
+    },
+    "death": {
+      "y": "114",
+      "m": "09",
+      "d": "20"
+    },
+    "note": "歿"
+  },
+  "spouses": [
+    {
+      "id": "sp-1",
+      "title": "配偶",
+      "name": "林陳美玉",
+      "idNumber": "F201234568",
+      "address": "新北市板橋區文化路一段188號",
+      "birth": {
+        "y": "21",
+        "m": "07",
+        "d": "08"
+      },
+      "death": {
+        "y": "108",
+        "m": "02",
+        "d": "14"
+      },
+      "note": "先歿"
+    }
+  ],
+  "heirs": [
+    {
+      "id": "h-1",
+      "parentId": "root",
+      "title": "長子",
+      "name": "林國榮",
+      "idNumber": "F120111222",
+      "address": "新北市板橋區民生路二段50號",
+      "birth": {
+        "y": "42",
+        "m": "05",
+        "d": "10"
+      },
+      "death": {
+        "y": "105",
+        "m": "11",
+        "d": "03"
+      },
+      "note": "先歿（由子女代位繼承）",
+      "dotsAfter": false,
+      "spouses": [
+        {
+          "id": "hsp-1",
+          "title": "配偶",
+          "name": "張淑芬",
+          "idNumber": "F220111223",
+          "address": "新北市板橋區民生路二段50號",
+          "birth": {
+            "y": "44",
+            "m": "08",
+            "d": "19"
+          },
+          "death": {
+            "y": "",
+            "m": "",
+            "d": ""
+          },
+          "note": "存"
+        }
+      ]
+    },
+    {
+      "id": "h-1-1",
+      "parentId": "h-1",
+      "title": "長孫",
+      "name": "林志明",
+      "idNumber": "F123001001",
+      "address": "臺北市中正區忠孝東路一段80號",
+      "birth": {
+        "y": "66",
+        "m": "01",
+        "d": "22"
+      },
+      "death": {
+        "y": "115",
+        "m": "01",
+        "d": "10"
+      },
+      "note": "再轉繼承",
+      "dotsAfter": false,
+      "spouses": [
+        {
+          "id": "hsp-1-1",
+          "title": "配偶",
+          "name": "陳怡君",
+          "idNumber": "A223001002",
+          "address": "臺北市中正區忠孝東路一段80號",
+          "birth": {
+            "y": "68",
+            "m": "04",
+            "d": "11"
+          },
+          "death": {
+            "y": "",
+            "m": "",
+            "d": ""
+          },
+          "note": "存（再轉繼承人）"
+        }
+      ]
+    },
+    {
+      "id": "h-1-1-1",
+      "parentId": "h-1-1",
+      "title": "曾孫",
+      "name": "林柏翰",
+      "idNumber": "A129001001",
+      "address": "臺北市中正區忠孝東路一段80號",
+      "birth": {
+        "y": "95",
+        "m": "06",
+        "d": "15"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "再轉繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-1-1-2",
+      "parentId": "h-1-1",
+      "title": "曾孫女",
+      "name": "林品妍",
+      "idNumber": "A229001002",
+      "address": "臺北市中正區忠孝東路一段80號",
+      "birth": {
+        "y": "98",
+        "m": "10",
+        "d": "03"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "再轉繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-1-2",
+      "parentId": "h-1",
+      "title": "次孫",
+      "name": "林志強",
+      "idNumber": "F123001003",
+      "address": "新北市中和區景平路120號",
+      "birth": {
+        "y": "68",
+        "m": "09",
+        "d": "05"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-1-3",
+      "parentId": "h-1",
+      "title": "孫女",
+      "name": "林雅婷",
+      "idNumber": "F223001004",
+      "address": "桃園市中壢區中央東路66號",
+      "birth": {
+        "y": "70",
+        "m": "12",
+        "d": "18"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-1-4",
+      "parentId": "h-1",
+      "title": "次孫女",
+      "name": "林佳穎",
+      "idNumber": "F223001005",
+      "address": "新北市板橋區民生路二段50號",
+      "birth": {
+        "y": "73",
+        "m": "03",
+        "d": "27"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-2",
+      "parentId": "root",
+      "title": "次子",
+      "name": "林國華",
+      "idNumber": "F120222333",
+      "address": "新北市新莊區中正路310號",
+      "birth": {
+        "y": "44",
+        "m": "10",
+        "d": "12"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "存（繼承人）",
+      "dotsAfter": false,
+      "spouses": [
+        {
+          "id": "hsp-2",
+          "title": "配偶",
+          "name": "黃麗華",
+          "idNumber": "F220222334",
+          "address": "新北市新莊區中正路310號",
+          "birth": {
+            "y": "46",
+            "m": "02",
+            "d": "28"
+          },
+          "death": {
+            "y": "",
+            "m": "",
+            "d": ""
+          },
+          "note": "存"
+        }
+      ]
+    },
+    {
+      "id": "h-3",
+      "parentId": "root",
+      "title": "參子",
+      "name": "林國良",
+      "idNumber": "F120333444",
+      "address": "臺中市西屯區公益路二段99號",
+      "birth": {
+        "y": "47",
+        "m": "06",
+        "d": "14"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "拋棄繼承",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-4",
+      "parentId": "root",
+      "title": "肆子",
+      "name": "林國棟",
+      "idNumber": "F120444555",
+      "address": "高雄市左營區博愛二路200號",
+      "birth": {
+        "y": "49",
+        "m": "11",
+        "d": "25"
+      },
+      "death": {
+        "y": "111",
+        "m": "04",
+        "d": "09"
+      },
+      "note": "先歿（由子女代位繼承）",
+      "dotsAfter": false,
+      "spouses": [
+        {
+          "id": "hsp-4",
+          "title": "配偶",
+          "name": "吳秀梅",
+          "idNumber": "E220444556",
+          "address": "高雄市左營區博愛二路200號",
+          "birth": {
+            "y": "51",
+            "m": "09",
+            "d": "03"
+          },
+          "death": {
+            "y": "",
+            "m": "",
+            "d": ""
+          },
+          "note": "存"
+        }
+      ]
+    },
+    {
+      "id": "h-4-1",
+      "parentId": "h-4",
+      "title": "長男",
+      "name": "林家豪",
+      "idNumber": "E124001001",
+      "address": "高雄市左營區博愛二路200號",
+      "birth": {
+        "y": "74",
+        "m": "02",
+        "d": "11"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-4-2",
+      "parentId": "h-4",
+      "title": "次男",
+      "name": "林家偉",
+      "idNumber": "E124001002",
+      "address": "高雄市鼓山區明誠三路88號",
+      "birth": {
+        "y": "76",
+        "m": "07",
+        "d": "19"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-4-3",
+      "parentId": "h-4",
+      "title": "長女",
+      "name": "林家琪",
+      "idNumber": "E224001003",
+      "address": "臺南市東區中華東路一段15號",
+      "birth": {
+        "y": "78",
+        "m": "05",
+        "d": "21"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-4-4",
+      "parentId": "h-4",
+      "title": "次女",
+      "name": "林家惠",
+      "idNumber": "E224001004",
+      "address": "高雄市左營區博愛二路200號",
+      "birth": {
+        "y": "80",
+        "m": "08",
+        "d": "30"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-4-5",
+      "parentId": "h-4",
+      "title": "參女",
+      "name": "林家欣",
+      "idNumber": "E224001005",
+      "address": "屏東縣屏東市自由路102號",
+      "birth": {
+        "y": "82",
+        "m": "12",
+        "d": "04"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-5",
+      "parentId": "root",
+      "title": "長女",
+      "name": "林淑娟",
+      "idNumber": "F220555666",
+      "address": "新竹市東區光復路二段101號",
+      "birth": {
+        "y": "51",
+        "m": "04",
+        "d": "07"
+      },
+      "death": {
+        "y": "109",
+        "m": "08",
+        "d": "16"
+      },
+      "note": "先歿（由子女代位繼承）",
+      "dotsAfter": false,
+      "spouses": [
+        {
+          "id": "hsp-5",
+          "title": "配偶",
+          "name": "周建宇",
+          "idNumber": "J120555667",
+          "address": "新竹市東區光復路二段101號",
+          "birth": {
+            "y": "49",
+            "m": "01",
+            "d": "20"
+          },
+          "death": {
+            "y": "",
+            "m": "",
+            "d": ""
+          },
+          "note": "存"
+        }
+      ]
+    },
+    {
+      "id": "h-5-1",
+      "parentId": "h-5",
+      "title": "長男",
+      "name": "周子軒",
+      "idNumber": "J125001001",
+      "address": "新竹市東區光復路二段101號",
+      "birth": {
+        "y": "77",
+        "m": "03",
+        "d": "12"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-5-2",
+      "parentId": "h-5",
+      "title": "次男",
+      "name": "周子翔",
+      "idNumber": "J125001002",
+      "address": "新竹縣竹北市光明六路88號",
+      "birth": {
+        "y": "79",
+        "m": "09",
+        "d": "23"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-5-3",
+      "parentId": "h-5",
+      "title": "長女",
+      "name": "周子涵",
+      "idNumber": "J225001003",
+      "address": "臺北市大安區和平東路二段45號",
+      "birth": {
+        "y": "82",
+        "m": "06",
+        "d": "05"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "代位繼承人",
+      "dotsAfter": false,
+      "spouses": []
+    },
+    {
+      "id": "h-6",
+      "parentId": "root",
+      "title": "次女",
+      "name": "林淑惠",
+      "idNumber": "F220666777",
+      "address": "新北市永和區中正路412號",
+      "birth": {
+        "y": "54",
+        "m": "09",
+        "d": "18"
+      },
+      "death": {
+        "y": "",
+        "m": "",
+        "d": ""
+      },
+      "note": "存（繼承人）",
+      "dotsAfter": false,
+      "spouses": [
+        {
+          "id": "hsp-6",
+          "title": "配偶",
+          "name": "蔡文彬",
+          "idNumber": "F120666778",
+          "address": "新北市永和區中正路412號",
+          "birth": {
+            "y": "53",
+            "m": "11",
+            "d": "09"
+          },
+          "death": {
+            "y": "",
+            "m": "",
+            "d": ""
+          },
+          "note": "存"
+        }
+      ]
+    }
+  ]
+}
